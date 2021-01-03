@@ -10,6 +10,7 @@ by HansenH  (hansenh@foxmail.com)
 2. 启动后输入"help"查看帮助信息。
 
 记录保存在文件"records.csv"和"ongoing.csv"中，请勿删除，不建议手动修改。
+请勿删除"help_msg.txt"
 
 
 Powered by Pyinstaller
