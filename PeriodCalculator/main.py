@@ -244,7 +244,7 @@ class Main():
             print('当前还没有任何记录哦，赶紧来添加吧！')
         print('')
 
-    #插入经期开始记录
+    #输出未来五次经期预测
     def future(self):
         self.calculate()
         if self.count > 1:
@@ -403,7 +403,8 @@ class Main():
                     print('\n您输入的日期有误，已取消\n')
             else:
                 print('\n操作取消，已返回主菜单\n')
-            
+
+    #插入一条完整记录        
     def insert(self):
         if self.count > 0:
             self.show_records()
