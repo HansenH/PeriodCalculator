@@ -1,4 +1,4 @@
-# PeroidCalculator
+# PeriodCalculator
 
 经期计算器  
 Period Calculator  
