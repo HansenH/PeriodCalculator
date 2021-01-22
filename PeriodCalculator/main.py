@@ -3,7 +3,7 @@ from datetime import date
 from datetime import timedelta
 import sys
 
-version = '1.0'     #版本号
+version = '2.0'     #版本号
 records_file = 'records.csv'    #记录保存路径
 ongoing_file = 'ongoing.csv'    #正在进行的经期信息
 help_file = 'help_msg.txt'      #帮助信息路径
