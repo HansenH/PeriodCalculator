@@ -1,4 +1,4 @@
-# PeroidCalculator
+# PeriodCalculator
 
 2.0
 
