@@ -1,5 +1,6 @@
+# -*- coding:utf-8 -*-
 from tkinter import Tk
-from tkinter.ttk import Button  # win本地化主题模块，部件更美观
+from tkinter.ttk import Button  # win本地化主题模块，元件更美观
 import ctypes
 
 class UserInterface():
