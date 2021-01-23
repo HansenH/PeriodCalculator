@@ -1,26 +1,38 @@
 # -*- coding:utf-8 -*-
 from datetime import date
 from datetime import timedelta
+from user_interface import UserInterface
 import sys
+import json
 
 version = '2.0'     #版本号
-records_file = 'records.csv'    #记录保存路径
-ongoing_file = 'ongoing.csv'    #正在进行的经期信息
-help_file = 'help_msg.txt'      #帮助信息路径
-
 
 class Main():
+    '''程序核心，包括初始化与功能逻辑'''
+
     def __init__(self):
-        print('|******************************************|')
-        print('|  _   _                            _   _  |')
-        print('| | | | | __ _ _ __  ___  ___ _ __ | | | | |')
-        print("| | |_| |/ _` | '_ \/ __|/ _ \ '_ \| |_| | |")
-        print('| |  _  | (_| | | | \__ \  __/ | | |  _  | |')
-        print('| |_| |_|\__,_|_| |_|___/\___|_| |_|_| |_| |')
-        print('|                                          |')
-        print('|    经期计算器 Period Calculator V%s     |' % version)
-        print('|                                          |')
-        print('|******************************************|\n')
+        self.version = version
+        self.records_file = 'records.csv'    #默认记录保存位置
+        self.ongoing_file = 'ongoing.csv'    #默认正在进行的经期信息保存位置
+        self.window_width = 600     #默认窗口宽
+        self.window_height = 600    #默认窗口高
+        
+        try:    #加载设置
+            with open('config.json') as file_obj:
+                settings = json.load(file_obj)
+                self.records_file = settings['records_file']
+                self.ongoing_file = settings['ongoing_file']
+                self.window_width = settings['window_width']
+                self.window_height = settings['window_height']
+        except FileNotFoundError:
+            settings = {}
+            settings['records_file'] = self.records_file
+            settings['ongoing_file'] = self.ongoing_file
+            settings['window_width'] = self.window_width
+            settings['window_height'] = self.window_height
+            with open('config.json', 'w') as file_obj:
+                json.dump(settings, file_obj, indent=4)
+
 
         self.count = 0                          #记录条数(int)
         self.average_interval = None            #总平均周期(int)
@@ -39,13 +51,15 @@ class Main():
             self.show_stats()   #输出统计信息
         except Exception:       #文件数据格式错误
             self.show_stats()   #已在parse_date方法中完成异常处理，因处在错误的选择分支，此处跳出语句重新执行
-        self.help()
-        self.menu()
+        
+        ui = UserInterface(self)    #启动图形界面
+        ui.window.mainloop()
+
 
     def load(self):
         #读取全部经期记录
         try:
-            with open(records_file, encoding='utf-8') as file_obj:
+            with open(self.records_file, encoding='utf-8') as file_obj:
                 raw_records = file_obj.read().rstrip()  #去除尾部多余空行（如有）
                 if raw_records != '':
                     for line in raw_records.split('\n'):
@@ -66,17 +80,17 @@ class Main():
                         raise ValueError
 
         except FileNotFoundError:
-            print('\n未找到记录文件"%s", 已重新创建\n' % records_file)
-            open(records_file, 'w', encoding='utf-8').close()       
+            print('\n未找到记录文件"%s", 已重新创建\n' % self.records_file)
+            open(self.records_file, 'w', encoding='utf-8').close()       
 
         except (ValueError, TypeError):
-            print('\n文件"%s"中的记录存在错误，无法读取' % records_file)
+            print('\n文件"%s"中的记录存在错误，无法读取' % self.records_file)
             print('输入"y"将创建新记录文件，输入其他内容将导致程序关闭')
-            print('【警告：创建新记录文件将擦去原"' + records_file + '"中的所有信息】\n')
+            print('【警告：创建新记录文件将擦去原"' + self.records_file + '"中的所有信息】\n')
             if input('> ') == 'y':
-                open(records_file, 'w', encoding='utf-8').close()
+                open(self.records_file, 'w', encoding='utf-8').close()
                 self.count = 0
-                print('\n记录文件"' + records_file + '"已重新创建')
+                print('\n记录文件"' + self.records_file + '"已重新创建')
             else:
                 sys.exit()
 
@@ -97,7 +111,7 @@ class Main():
 
         #读取当前进行中经期记录
         try:
-            with open(ongoing_file, encoding='utf-8') as file_obj:
+            with open(self.ongoing_file, encoding='utf-8') as file_obj:
                 raw_ongoing = file_obj.read().rstrip()
                 if raw_ongoing != '':
                     yyyy, mm, dd = raw_ongoing.split(',')
@@ -113,10 +127,11 @@ class Main():
                             raise ValueError
         except (FileNotFoundError, ValueError, TypeError):
             self.ongoing_date = None
-            open(ongoing_file, 'w', encoding='utf-8').close()   
+            open(self.ongoing_file, 'w', encoding='utf-8').close()   
 
     #将self.records列表中的记录保存至文件
-    def save(self, filename=records_file):
+    def save(self):
+        filename = self.records_file
         with open(filename, 'w', encoding='utf-8') as file_obj:
             for record in self.records:
                 file_obj.write(record['from_date'] + ',' + str(record['duration']) + '\n')
@@ -195,11 +210,11 @@ class Main():
     #输出帮助
     def help(self):
         try:
-            with open(help_file, encoding='utf-8') as help_file_obj:
-                help_msg = help_file_obj.read().rstrip()
+            with open(self.help_file, encoding='utf-8') as self.help_file_obj:
+                help_msg = self.help_file_obj.read().rstrip()
                 print('\n' + help_msg + '\n')
         except FileNotFoundError:
-            print('\n找不到文件"' + help_file + '"\n')
+            print('\n找不到文件"' + self.help_file + '"\n')
 
     #输出统计数据
     def show_stats(self):
@@ -314,7 +329,7 @@ class Main():
     #删除正在进行中的经期
     def reset(self):
         self.ongoing_date = None
-        open(ongoing_file, 'w', encoding='utf-8').close()
+        open(self.ongoing_file, 'w', encoding='utf-8').close()
         print('\n已清除正在进行中的经期\n')
 
     #记录经期开始/结束
@@ -327,7 +342,7 @@ class Main():
             option = input('> ').lower()
             if option == '1':
                 self.ongoing_date = date.today()
-                with open(ongoing_file, 'w', encoding='utf-8') as file_obj:
+                with open(self.ongoing_file, 'w', encoding='utf-8') as file_obj:
                     file_obj.write('{},{},{}'.format(self.ongoing_date.year, 
                             self.ongoing_date.month, self.ongoing_date.day))
                 print('今天是经期第一天\n')
@@ -346,7 +361,7 @@ class Main():
                         print('\n已取消————不能在上一次经期结束前开始！\n')
                     else:
                         self.ongoing_date = date_to_start
-                        with open(ongoing_file, 'w', encoding='utf-8') as file_obj:
+                        with open(self.ongoing_file, 'w', encoding='utf-8') as file_obj:
                             file_obj.write('{},{},{}'.format(date_to_start.year, 
                                     date_to_start.month, date_to_start.day))
                         print('\n记录成功 ({})\n'.format(self.ongoing_date))
@@ -373,7 +388,7 @@ class Main():
                 self.count += 1
                 self.save()
                 self.ongoing_date = None        #清除进行中的经期
-                open(ongoing_file, 'w', encoding='utf-8').close()
+                open(self.ongoing_file, 'w', encoding='utf-8').close()
                 print('\n今天经期结束啦\n')
             elif option == '2':
                 try:
@@ -397,7 +412,7 @@ class Main():
                         self.count += 1
                         self.save()
                         self.ongoing_date = None        #清除进行中的经期
-                        open(ongoing_file, 'w', encoding='utf-8').close()
+                        open(self.ongoing_file, 'w', encoding='utf-8').close()
                         print('\n已记录经期结束\n')  
                 except ValueError:
                     print('\n您输入的日期有误，已取消\n')
@@ -543,13 +558,13 @@ class Main():
             yyyy, mm, dd = s.split('-')
             return date(int(yyyy), int(mm), int(dd))
         except (ValueError, TypeError):
-            print('文件"%s"中的记录存在错误，无法读取' % records_file)
+            print('文件"%s"中的记录存在错误，无法读取' % self.records_file)
             print('输入"y"将创建新记录文件，输入其他内容将导致程序关闭')
-            print('【警告：创建新记录文件将擦去原"' + records_file + '"中的所有信息】\n')
+            print('【警告：创建新记录文件将擦去原"' + self.records_file + '"中的所有信息】\n')
             if input('> ') == 'y':
-                open(records_file, 'w', encoding='utf-8').close()
+                open(self.records_file, 'w', encoding='utf-8').close()
                 self.count = 0
-                print('\n记录文件"' + records_file + '"已重新创建')
+                print('\n记录文件"' + self.records_file + '"已重新创建')
             else:
                 sys.exit()
 

@@ -1,0 +1,6 @@
+{
+    "records_file": "records.csv",
+    "ongoing_file": "ongoing.csv",
+    "window_width": 600,
+    "window_height": 600
+}
