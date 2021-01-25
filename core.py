@@ -16,6 +16,7 @@ class Main():
         self.ongoing_file = 'ongoing.csv'    #默认正在进行的经期信息保存位置
         self.window_width = 600     #默认窗口宽
         self.window_height = 600    #默认窗口高
+        self.dpi_adapt = True       #默认开启高分屏缩放适配
         
         try:    #加载设置
             with open('config.json') as file_obj:
@@ -24,15 +25,9 @@ class Main():
                 self.ongoing_file = settings['ongoing_file']
                 self.window_width = settings['window_width']
                 self.window_height = settings['window_height']
+                self.dpi_adapt = settings['dpi_adapt']
         except FileNotFoundError:
-            settings = {}
-            settings['records_file'] = self.records_file
-            settings['ongoing_file'] = self.ongoing_file
-            settings['window_width'] = self.window_width
-            settings['window_height'] = self.window_height
-            with open('config.json', 'w') as file_obj:
-                json.dump(settings, file_obj, indent=4)
-
+            self.save_settings()
 
         self.count = 0                          #记录条数(int)
         self.average_interval = None            #总平均周期(int)
@@ -55,9 +50,19 @@ class Main():
         ui = UserInterface(self)    #启动图形界面
         ui.window.mainloop()
 
+    def save_settings(self):
+        '''保存设置'''
+        settings = {}
+        settings['records_file'] = self.records_file
+        settings['ongoing_file'] = self.ongoing_file
+        settings['window_width'] = self.window_width
+        settings['window_height'] = self.window_height
+        settings['dpi_adapt'] = self.dpi_adapt
+        with open('config.json', 'w') as file_obj:
+            json.dump(settings, file_obj, indent=4)
 
     def load(self):
-        #读取全部经期记录
+        '''读取全部经期记录'''
         try:
             with open(self.records_file, encoding='utf-8') as file_obj:
                 raw_records = file_obj.read().rstrip()  #去除尾部多余空行（如有）
