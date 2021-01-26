@@ -1,8 +1,7 @@
 # -*- coding:utf-8 -*-
 from tkinter import Tk
-from tkinter.ttk import Style
-from tkinter.ttk import Button  # ttk: win本地化主题模块，组件更美观
 from tkinter import Frame
+from tkinter import Button
 import ctypes
 
 class UserInterface():
@@ -21,7 +20,6 @@ class UserInterface():
         self.window.geometry('{}x{}'.format(self.window_width, self.window_height)) #窗口大小
         self.window.resizable(0,0)      #锁定窗口大小
 
-        self.style = Style()
         self.init_frame_left()
         self.init_frame2()
 
@@ -50,8 +48,8 @@ class UserInterface():
         self.init_btn()
 
     def init_btn(self):
-        sytle = Style().configure('TButton', background='red')
-        self.btn = Button(self.frame_left, text='HHHH', style='TButton')
+        self.btn = Button(self.frame_left, text='HHHHHHHH', bd=8, 
+            relief='groove', bg='#FFF0F5', fg='hotpink')
         
         self.btn.place(x=50, y=100, anchor='nw')
 
