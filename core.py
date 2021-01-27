@@ -41,11 +41,11 @@ class Main():
         # [{‘from_date': '2015-10-28', 'duration': 6, 'interval': None}, 
         #  {‘from_date': '2015-11-30', 'duration': 6, 'interval': 33}]
 
-        try:
-            self.load()         #从文件读取全部经期记录
-            self.show_stats()   #输出统计信息
-        except Exception:       #文件数据格式错误
-            self.show_stats()   #已在parse_date方法中完成异常处理，因处在错误的选择分支，此处跳出语句重新执行
+        # try:
+        #     self.load()         #从文件读取全部经期记录
+        #     self.show_stats()   #输出统计信息
+        # except Exception:       #文件数据格式错误
+        #     self.show_stats()   #已在parse_date方法中完成异常处理，因处在错误的选择分支，此处跳出语句重新执行
         
         ui = UserInterface(self)    #启动图形界面
         ui.window.mainloop()

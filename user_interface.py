@@ -37,36 +37,110 @@ class UserInterface():
     def init_frame_left(self):
         self.frame_left = Frame(
             self.window, 
-            bg='#FFC0CB', 
             bd=10, 
             relief='groove', 
             width=self.window_width * 0.3, 
-            height=self.window_height
+            height=self.window_height,
+            bg='#FFC0CB'    #pink
         )
         self.frame_left.pack(side='left')
         self.frame_left.pack_propagate(0)
-        self.init_btn()
-
-    def init_btn(self):
-        self.btn = Button(self.frame_left, text='HHHHHHHH', bd=8, 
-            relief='groove', bg='#FFF0F5', fg='hotpink')
-        
-        self.btn.place(x=50, y=100, anchor='nw')
-
+        self.init_btn_add()
+        self.init_btn_callender()
+        self.init_btn_stats()
+        self.init_btn_list()
+        self.init_btn_settings()
+        self.init_btn_about()
 
     def init_frame2(self):
         self.frame2 = Frame(
             self.window, 
-            bg='#FFF0F5', 
             bd=10, 
             relief='groove', 
             width=self.window_width * 0.7, 
-            height=self.window_height
+            height=self.window_height,
+            bg='#FFF0F5'    #lavenderblush
         )
         self.frame2.pack(side='right')
         self.frame2.pack_propagate(0)
 
+    def init_btn_add(self):
+        self.btn_add = Button(
+            self.frame_left, 
+            text='新增开始/结束', 
+            bd=6, 
+            relief='groove', 
+            width=14,
+            height=3,
+            bg='#DDA0DD',   #plum
+            # fg='white'
+        )
+        self.btn_add.place(x=self.window_width * 0.03, y=self.window_height * 0.08, anchor='nw')
 
+    def init_btn_callender(self):
+        self.btn_callender = Button(
+            self.frame_left, 
+            text='日历', 
+            bd=8, 
+            relief='groove', 
+            width=10,
+            height=1,
+            bg='#FFF0F5',   #lavenderblush
+            fg='hotpink'
+        )
+        self.btn_callender.place(x=self.window_width * 0.05, y=self.window_height * 9 / 30, anchor='nw')
+    
+    def init_btn_stats(self):
+        self.btn_stats = Button(
+            self.frame_left, 
+            text='统计数据', 
+            bd=8, 
+            relief='groove', 
+            width=10,
+            height=1,
+            bg='#FFF0F5',   #lavenderblush
+            fg='hotpink'
+        )
+        self.btn_stats.place(x=self.window_width * 0.05, y=self.window_height * 13 / 30, anchor='nw')
+
+    def init_btn_list(self):
+        self.btn_list = Button(
+            self.frame_left, 
+            text='查看记录', 
+            bd=8, 
+            relief='groove', 
+            width=10,
+            height=1,
+            bg='#FFF0F5', 
+            fg='hotpink'
+        )
+        self.btn_list.place(x=self.window_width * 0.05, y=self.window_height * 17 / 30, anchor='nw')
+
+    def init_btn_settings(self):
+        self.btn_settings = Button(
+            self.frame_left, 
+            text='设置', 
+            bd=8, 
+            relief='groove', 
+            width=10,
+            height=1,
+            bg='#FFF0F5', 
+            fg='hotpink'
+        )
+        self.btn_settings.place(x=self.window_width * 0.05, y=self.window_height * 21 / 30, anchor='nw')
+
+    def init_btn_about(self):
+        self.btn_about = Button(
+            self.frame_left, 
+            text='关于', 
+            bd=8, 
+            relief='groove', 
+            width=10,
+            height=1,
+            bg='#FFF0F5', 
+            fg='hotpink'
+        )
+        self.btn_about.place(x=self.window_width * 0.05, y=self.window_height * 25 / 30, anchor='nw')
 
 
 if __name__ == '__main__':
