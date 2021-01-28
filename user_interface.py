@@ -3,6 +3,7 @@ from tkinter import Tk
 from tkinter import Frame
 from tkinter import Button
 from tkinter import Canvas
+from tkinter import Label
 import ctypes
 
 class UserInterface():
@@ -13,18 +14,22 @@ class UserInterface():
         self.window = Tk()
         self.window.iconbitmap('icon.ico')
         self.window.title('Period Calculator V%s' % self.main.version)
-        
-        self.scale_factor = 1   #默认缩放因子
+
+        self.scale_factor = 1   #缩放因子
         self.dpi_adapt()        #高DPI适配
-        self.window_width = int(self.main.window_width * self.scale_factor)
-        self.window_height = int(self.main.window_height * self.scale_factor)
-        self.window.geometry('{}x{}'.format(self.window_width, self.window_height)) #窗口大小
-        self.window.resizable(0,0)      #锁定窗口大小
+        self.window_width = int(self.main.window_width * self.scale_factor)     #窗口宽
+        self.window_height = int(self.main.window_height * self.scale_factor)   #窗口高
+        window_x = int((self.window.winfo_screenwidth() * self.scale_factor - self.window_width) / 2)   #窗口位置（居中）
+        window_y = int((self.window.winfo_screenheight() * self.scale_factor - self.window_height) / 2) #窗口位置（居中）
+        self.window.geometry('{}x{}+{}+{}'.format(self.window_width, self.window_height, window_x, window_y))
+        self.window.resizable(False, False)      #锁定窗口大小
 
         self.init_frame_left()
-        self.init_frame2()
+        self.init_frame_stats()     #默认初始页
+        self.last_frame = self.frame_stats  #前一次的页面
+        self.click_stats()
 
-        self.window.configure(cursor = 'heart')
+        # self.window.configure(cursor = 'heart')
 
 
     def dpi_adapt(self):
@@ -65,14 +70,14 @@ class UserInterface():
             # font=('bold'),
             bd=self.window_width / 150, 
             relief='groove', 
-            width=int(self.window_width / 53),
+            width=14,
             height=3,
             bg='#DA70D6',   #orchid
             fg='#FFFFFF',   #white
             activebackground='#DA70D6',
             activeforeground='#FFFFFF'
         )
-        self.btn_add.place(x=self.window_width * 0.029, y=self.window_height * 0.1, anchor='nw')
+        self.btn_add.place(relx=0.5, y=self.window_height * 0.2, anchor='center')
 
     def init_btn_callender(self):
         '''左边栏日历按钮'''
@@ -81,14 +86,14 @@ class UserInterface():
             text='日历', 
             bd=self.window_width / 150, 
             relief='groove', 
-            width=int(self.window_width / 75),
+            width=10,
             height=1,
             bg='#FFF0F5',   #lavenderblush
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
             activeforeground='#FF1493'
         )
-        self.btn_callender.place(x=self.window_width * 0.05, y=self.window_height * 19 / 60, anchor='nw')
+        self.btn_callender.place(relx=0.5, rely=0.35, anchor='center')
     
     def init_btn_stats(self):
         '''左边栏统计数据按钮'''
@@ -97,14 +102,15 @@ class UserInterface():
             text='统计数据', 
             bd=self.window_width / 150, 
             relief='groove', 
-            width=int(self.window_width / 75),
+            width=10,
             height=1,
             bg='#FFF0F5',   #lavenderblush
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
-            activeforeground='#FF1493'
+            activeforeground='#FF1493',
+            command = self.click_stats
         )
-        self.btn_stats.place(x=self.window_width * 0.05, y=self.window_height * 27 / 60, anchor='nw')
+        self.btn_stats.place(relx=0.5, rely=0.48, anchor='center')
 
     def init_btn_list(self):
         '''左边栏查看记录按钮'''
@@ -113,14 +119,14 @@ class UserInterface():
             text='查看记录', 
             bd=self.window_width / 150, 
             relief='groove', 
-            width=int(self.window_width / 75),
+            width=10,
             height=1,
             bg='#FFF0F5',   #lavenderblush
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
             activeforeground='#FF1493'
         )
-        self.btn_list.place(x=self.window_width * 0.05, y=self.window_height * 35 / 60, anchor='nw')
+        self.btn_list.place(relx=0.5, rely=0.61, anchor='center')
 
     def init_btn_settings(self):
         '''左边栏设置按钮'''
@@ -129,14 +135,14 @@ class UserInterface():
             text='设置', 
             bd=self.window_width / 150, 
             relief='groove', 
-            width=int(self.window_width / 75),
+            width=10,
             height=1,
             bg='#FFF0F5',   #lavenderblush
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
             activeforeground='#FF1493'
         )
-        self.btn_settings.place(x=self.window_width * 0.05, y=self.window_height * 43 / 60, anchor='nw')
+        self.btn_settings.place(relx=0.5, rely=0.74, anchor='center')
 
     def init_btn_about(self):
         '''左边栏关于按钮'''
@@ -145,14 +151,15 @@ class UserInterface():
             text='关于', 
             bd=self.window_width / 150, 
             relief='groove', 
-            width=int(self.window_width / 75),
+            width=10,
             height=1,
             bg='#FFF0F5',   #lavenderblush
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
-            activeforeground='#FF1493'
+            activeforeground='#FF1493',
+            command = self.click_about
         )
-        self.btn_about.place(x=self.window_width * 0.05, y=self.window_height * 51 / 60, anchor='nw')
+        self.btn_about.place(relx=0.5, rely=0.87, anchor='center')
 
     def init_indicator(self):
         '''左边栏指示标志（爱心）'''
@@ -178,10 +185,11 @@ class UserInterface():
             0, 3 * self.window_width / 375, 
             fill='#DA70D6',     #orchid
         )   #画一个多边形爱心
-        self.indicator.place(x=self.window_width * 0.27, y=self.window_height * 27 / 60 + self.scale_factor * 8, anchor='ne')
+        self.indicator.place(relx=0.9, rely=0.48, anchor='center')
 
-    def init_frame2(self):
-        self.frame2 = Frame(
+    def init_frame_stats(self):
+        '''统计数据页'''
+        self.frame_stats = Frame(
             self.window, 
             bd=self.window_width / 120,
             relief='groove', 
@@ -189,9 +197,61 @@ class UserInterface():
             height=self.window_height,
             bg='#FFF0F5'    #lavenderblush
         )
-        self.frame2.pack(side='right')
-        self.frame2.pack_propagate(0)
+        self.frame_stats.pack(side='right')
+        self.frame_stats.pack_propagate(0)
+        self.init_text_stats()
+
+    def init_text_stats(self):
+        '''统计数据文本'''
+        self.main.show_stats()
+        self.text_stats = Label(
+            self.frame_stats,
+            text=self.main.print_stats,
+            justify='left',
+            bg='#FFF0F5'    #lavenderblush
+        )
+        self.text_stats.place(relx=0.5, rely=0.1, anchor='n')
+
+    def init_frame_about(self):
+        '''关于页'''
+        self.frame_about = Frame(
+            self.window, 
+            bd=self.window_width / 120,
+            relief='groove', 
+            width=self.window_width * 0.7, 
+            height=self.window_height,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        self.frame_about.pack(side='right')
+        self.frame_about.pack_propagate(0)
+        self.init_text_about()
+
+    def init_text_about(self):
+        '''关于文本'''
+        # self.main.show_about()
+        self.text_about = Label(
+            self.frame_about,
+            text='about',
+            justify='left',
+            bg='#FFF0F5'    #lavenderblush
+        )
+        self.text_about.place(relx=0.5, rely=0.1, anchor='n')
+
+
+    def click_stats(self):
+        '''点击统计数据按钮'''
+        self.indicator.place(relx=0.9, rely=0.48, anchor='center')  #移动爱心位置
+        self.last_frame.destroy()       #关闭之前的右侧页面
+        self.init_frame_stats()         #打开新的右侧页面
+        self.last_frame = self.frame_stats
+
+    def click_about(self):
+        '''点击关于按钮'''
+        self.indicator.place(relx=0.9, rely=0.87, anchor='center')
+        self.last_frame.destroy()
+        self.init_frame_about()
+        self.last_frame = self.frame_about
+        
 
 if __name__ == '__main__':
     print('This is not the start file, please run "core.py".')
-    input('Press "Enter" to quit.')

@@ -41,11 +41,11 @@ class Main():
         # [{‘from_date': '2015-10-28', 'duration': 6, 'interval': None}, 
         #  {‘from_date': '2015-11-30', 'duration': 6, 'interval': 33}]
 
-        # try:
-        #     self.load()         #从文件读取全部经期记录
-        #     self.show_stats()   #输出统计信息
-        # except Exception:       #文件数据格式错误
-        #     self.show_stats()   #已在parse_date方法中完成异常处理，因处在错误的选择分支，此处跳出语句重新执行
+        try:
+            self.load()         #从文件读取全部经期记录
+            self.show_stats()   #输出统计信息
+        except Exception:       #文件数据格式错误
+            self.show_stats()   #已在parse_date方法中完成异常处理，因处在错误的选择分支，此处跳出语句重新执行
         
         ui = UserInterface(self)    #启动图形界面
         ui.window.mainloop()
@@ -224,31 +224,32 @@ class Main():
     #输出统计数据
     def show_stats(self):
         self.calculate()
-        print('\n今天是{}年{}月{}日'.format(date.today().year, date.today().month, 
+        self.print_stats = ''
+        self.print_stats += ('\n今天是{}年{}月{}日\n'.format(date.today().year, date.today().month, 
                 date.today().day))
-        print('您当前一共有%d条记录' % self.count)
+        self.print_stats += ('您当前一共有%d条记录\n' % self.count)
         if self.count > 1:
-            print('------------------------------------------')
-            print('近6次平均周期:\t%d天' % self.average_interval_last_six)
-            print('平均周期:     \t%d天' % self.average_interval)
-            print('平均经期持续: \t%d天' % self.average_duration)
+            self.print_stats += ('------------------------------------------\n')
+            self.print_stats += ('近6次平均周期:\t%d天\n' % self.average_interval_last_six)
+            self.print_stats += ('平均周期:     \t%d天\n' % self.average_interval)
+            self.print_stats += ('平均经期持续: \t%d天\n' % self.average_duration)
             if self.ongoing_date is None:
-                print('可能的排卵日: \t{}年{}月{}日'.format(self.Ovulation.year, 
+                self.print_stats += ('可能的排卵日: \t{}年{}月{}日\n'.format(self.Ovulation.year, 
                         self.Ovulation.month, self.Ovulation.day))
                 diff = (self.next_date - date.today()).days
                 if diff >= 0:
-                    print('预计下次来临: \t{}年{}月{}日，距今还有{}天'.format(self.next_date.year, 
+                    self.print_stats += ('预计下次来临: \t{}年{}月{}日，距今还有{}天\n'.format(self.next_date.year, 
                             self.next_date.month, self.next_date.day, diff))
                 else:
-                    print('预计下次来临: \t{}年{}月{}日，距今已过去{}天'.format(self.next_date.year, 
+                    self.print_stats += ('预计下次来临: \t{}年{}月{}日，距今已过去{}天\n'.format(self.next_date.year, 
                             self.next_date.month, self.next_date.day, -diff))
         if self.ongoing_date is not None:
             ongoing_duration = (date.today() - self.ongoing_date).days + 1
-            print('------------------------------------------')
-            print('您当前处于经期第%d天 ' % ongoing_duration, end='')
-            print('（开始于{}年{}月{}日）'.format(self.ongoing_date.year, 
+            self.print_stats += ('------------------------------------------\n')
+            self.print_stats += ('您当前处于经期第%d天 ' % ongoing_duration)
+            self.print_stats += ('（开始于{}年{}月{}日）'.format(self.ongoing_date.year, 
                             self.ongoing_date.month, self.ongoing_date.day))
-        print('')
+        self.print_stats += ('\n')
 
     #显示全部记录
     def show_records(self):
