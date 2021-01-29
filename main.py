@@ -3,7 +3,7 @@ from datetime import date
 from datetime import timedelta
 import sys
 
-version = '1.0'     #版本号
+version = '1.1'     #版本号
 records_file = 'records.csv'    #记录保存路径
 ongoing_file = 'ongoing.csv'    #正在进行的经期信息
 help_file = 'help_msg.txt'      #帮助信息路径
@@ -34,16 +34,13 @@ class Main():
         # [{‘from_date': '2015-10-28', 'duration': 6, 'interval': None}, 
         #  {‘from_date': '2015-11-30', 'duration': 6, 'interval': 33}]
 
-        try:
-            self.load()         #从文件读取全部经期记录
-            self.show_stats()   #输出统计信息
-        except Exception:       #文件数据格式错误
-            self.show_stats()   #已在parse_date方法中完成异常处理，因处在错误的选择分支，此处跳出语句重新执行
+        self.load()         #从文件读取全部经期记录
+        self.show_stats()   #输出统计信息
         self.help()
         self.menu()
 
     def load(self):
-        #读取全部经期记录
+        '''读取经期记录文件'''
         try:
             with open(records_file, encoding='utf-8') as file_obj:
                 raw_records = file_obj.read().rstrip()  #去除尾部多余空行（如有）
@@ -75,6 +72,7 @@ class Main():
             print('【警告：创建新记录文件将擦去原"' + records_file + '"中的所有信息】\n')
             if input('> ') == 'y':
                 open(records_file, 'w', encoding='utf-8').close()
+                self.records = []
                 self.count = 0
                 print('\n记录文件"' + records_file + '"已重新创建')
             else:
@@ -115,14 +113,14 @@ class Main():
             self.ongoing_date = None
             open(ongoing_file, 'w', encoding='utf-8').close()   
 
-    #将self.records列表中的记录保存至文件
     def save(self, filename=records_file):
+        '''将self.records列表中的记录保存至文件'''
         with open(filename, 'w', encoding='utf-8') as file_obj:
             for record in self.records:
                 file_obj.write(record['from_date'] + ',' + str(record['duration']) + '\n')
 
-    #计算各种统计数据
     def calculate(self):
+        '''计算各种统计数据'''
         #计算每次间隔天数
         if self.count > 1:
             for i in range(1, self.count):
@@ -162,8 +160,8 @@ class Main():
         if self.count > 1:
             self.Ovulation = self.next_date - timedelta(14)
 
-    #进入循环菜单，等待命令输入
     def menu(self):
+        '''进入循环菜单，等待命令输入'''
         while True:
             command = input('> ').lower()
             if command == 'exit':
@@ -192,8 +190,8 @@ class Main():
                 print('\n您输入的指令有误')
                 self.help()
 
-    #输出帮助
     def help(self):
+        '''输出帮助'''
         try:
             with open(help_file, encoding='utf-8') as help_file_obj:
                 help_msg = help_file_obj.read().rstrip()
@@ -201,8 +199,8 @@ class Main():
         except FileNotFoundError:
             print('\n找不到文件"' + help_file + '"\n')
 
-    #输出统计数据
     def show_stats(self):
+        '''输出统计数据'''
         self.calculate()
         print('\n今天是{}年{}月{}日'.format(date.today().year, date.today().month, 
                 date.today().day))
@@ -230,8 +228,8 @@ class Main():
                             self.ongoing_date.month, self.ongoing_date.day))
         print('')
 
-    #显示全部记录
     def show_records(self):
+        '''显示全部记录'''
         self.calculate()
         print('\n------------------------------------')
         print('序号\t起始日期  持续天数  间隔天数')
@@ -244,8 +242,8 @@ class Main():
             print('当前还没有任何记录哦，赶紧来添加吧！')
         print('')
 
-    #输出未来五次经期预测
     def future(self):
+        '''输出未来五次经期预测'''
         self.calculate()
         if self.count > 1:
             print('\n未来5次经期的起始日期预测: ')
@@ -261,8 +259,8 @@ class Main():
         else:
             print('\n记录太少啦，暂时无法进行预测\n')
 
-    #删除某条记录
-    def delete(self):    
+    def delete(self):
+        '''删除某条记录'''
         if self.count > 0:
             self.show_records()
             try:
@@ -280,8 +278,8 @@ class Main():
         else:
             print('\n删除失败，当前还没有任何记录哦\n')
 
-    #删除最后一条记录
     def delete_last(self):
+        '''删除最后一条记录'''
         if self.count > 0:
             self.show_records()
             print('\n请输入"y"确认删除最后一条记录\n')
@@ -295,8 +293,8 @@ class Main():
         else:
             print('\n删除失败，当前还没有任何记录哦\n')
 
-    #删除全部记录
     def delete_all(self):
+        '''删除全部记录'''
         if self.count > 0:
             self.show_records()
             print('【警告！所有记录将被删除】\n请输入"Yes"确认该操作\n')
@@ -311,14 +309,14 @@ class Main():
         else:
             print('\n删除失败，当前还没有任何记录哦\n')
 
-    #删除正在进行中的经期
     def reset(self):
+        '''删除正在进行中的经期'''
         self.ongoing_date = None
         open(ongoing_file, 'w', encoding='utf-8').close()
         print('\n已清除正在进行中的经期\n')
 
-    #记录经期开始/结束
     def add(self):
+        '''记录经期开始/结束'''
         #还没有进行中的经期
         if self.ongoing_date is None:
             print('\n正在记录经期开始...\n')
@@ -404,8 +402,8 @@ class Main():
             else:
                 print('\n操作取消，已返回主菜单\n')
 
-    #插入一条完整记录        
     def insert(self):
+        '''插入一条完整记录'''
         if self.count > 0:
             self.show_records()
             print('正在插入记录...')
@@ -537,21 +535,10 @@ class Main():
                 self.save()
                 print('\n已成功添加记录\n')
 
-    #辅助函数，将日期字符串转变为date对象
     def parse_date(self, s):
-        try:
-            yyyy, mm, dd = s.split('-')
-            return date(int(yyyy), int(mm), int(dd))
-        except (ValueError, TypeError):
-            print('文件"%s"中的记录存在错误，无法读取' % records_file)
-            print('输入"y"将创建新记录文件，输入其他内容将导致程序关闭')
-            print('【警告：创建新记录文件将擦去原"' + records_file + '"中的所有信息】\n')
-            if input('> ') == 'y':
-                open(records_file, 'w', encoding='utf-8').close()
-                self.count = 0
-                print('\n记录文件"' + records_file + '"已重新创建')
-            else:
-                sys.exit()
+        '''辅助函数，将日期字符串转变为date对象'''
+        yyyy, mm, dd = s.split('-')
+        return date(int(yyyy), int(mm), int(dd))
 
 
 '''程序入口'''
