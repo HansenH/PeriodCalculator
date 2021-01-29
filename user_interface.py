@@ -4,7 +4,10 @@ from tkinter import Frame
 from tkinter import Button
 from tkinter import Canvas
 from tkinter import Label
+from tkinter import Text
+from tkinter import messagebox
 import ctypes
+import webbrowser
 
 class UserInterface():
     '''用户界面，包括图形化窗口与交互逻辑'''
@@ -24,13 +27,11 @@ class UserInterface():
         self.window.geometry('{}x{}+{}+{}'.format(self.window_width, self.window_height, window_x, window_y))
         self.window.resizable(False, False)      #锁定窗口大小
 
-        self.init_frame_left()
+        self.init_frame_left()      #初始化左边栏
         self.init_frame_stats()     #默认初始页
         self.last_frame = self.frame_stats  #前一次的页面
-        self.click_stats()
-
-        # self.window.configure(cursor = 'heart')
-
+        self.load_error_messagebox()    #弹窗通知记录文件加载异常（如有）
+        self.click_count = 0        #hidden触发计数器
 
     def dpi_adapt(self):
         '''解决高分屏下程序界面模糊问题（高DPI适配）'''
@@ -55,7 +56,7 @@ class UserInterface():
         self.frame_left.pack(side='left')
         self.frame_left.pack_propagate(0)
         self.init_btn_add()
-        self.init_btn_callender()
+        self.init_btn_calendar()
         self.init_btn_stats()
         self.init_btn_list()
         self.init_btn_settings()
@@ -77,11 +78,11 @@ class UserInterface():
             activebackground='#DA70D6',
             activeforeground='#FFFFFF'
         )
-        self.btn_add.place(relx=0.5, y=self.window_height * 0.2, anchor='center')
+        self.btn_add.place(relx=0.5, rely=0.17, anchor='center')
 
-    def init_btn_callender(self):
+    def init_btn_calendar(self):
         '''左边栏日历按钮'''
-        self.btn_callender = Button(
+        self.btn_calendar = Button(
             self.frame_left, 
             text='日历', 
             bd=self.window_width / 150, 
@@ -91,9 +92,10 @@ class UserInterface():
             bg='#FFF0F5',   #lavenderblush
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
-            activeforeground='#FF1493'
+            activeforeground='#FF1493',
+            command = self.click_calendar
         )
-        self.btn_callender.place(relx=0.5, rely=0.35, anchor='center')
+        self.btn_calendar.place(relx=0.5, rely=0.35, anchor='center')
     
     def init_btn_stats(self):
         '''左边栏统计数据按钮'''
@@ -187,6 +189,30 @@ class UserInterface():
         )   #画一个多边形爱心
         self.indicator.place(relx=0.9, rely=0.48, anchor='center')
 
+    def init_frame_calendar(self):
+        '''日历页'''
+        self.frame_calendar = Frame(
+            self.window, 
+            bd=self.window_width / 120,
+            relief='groove', 
+            width=self.window_width * 0.7, 
+            height=self.window_height,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        self.frame_calendar.pack(side='right')
+        self.frame_calendar.pack_propagate(0)
+        self.init_text_calendar()
+
+    def init_text_calendar(self):
+        '''日历文本'''
+        self.text_calendar = Label(
+            self.frame_calendar,
+            text='此功能开发中...',
+            justify='left',
+            bg='#FFF0F5'    #lavenderblush
+        )
+        self.text_calendar.place(relx=0.5, rely=0.4, anchor='n')
+
     def init_frame_stats(self):
         '''统计数据页'''
         self.frame_stats = Frame(
@@ -210,10 +236,10 @@ class UserInterface():
             justify='left',
             bg='#FFF0F5'    #lavenderblush
         )
-        self.text_stats.place(relx=0.5, rely=0.1, anchor='n')
+        self.text_stats.place(relx=0.5, rely=0.15, anchor='n')
 
     def init_frame_about(self):
-        '''关于页'''
+        '''"关于"页'''
         self.frame_about = Frame(
             self.window, 
             bd=self.window_width / 120,
@@ -227,16 +253,59 @@ class UserInterface():
         self.init_text_about()
 
     def init_text_about(self):
-        '''关于文本'''
-        # self.main.show_about()
-        self.text_about = Label(
+        '''"关于"页的文本'''
+        self.text_about = Text(
             self.frame_about,
-            text='about',
-            justify='left',
+            width=45,
+            height=15,
+            bd=0,
+            relief='flat',
+            cursor='arrow',
             bg='#FFF0F5'    #lavenderblush
         )
-        self.text_about.place(relx=0.5, rely=0.1, anchor='n')
+        self.text_about.insert('end','作者: HansenH\n\n')
+        self.text_about.insert('end','邮箱: hansenh@foxmail.com\n\n')
+        self.text_about.insert('end','源码(Python3): \n')
+        self.text_about.insert('end','https://github.com/HansenH/PeriodCalculator\n\n')
+        self.text_about.insert('end','\n\nMIT License\nCopyright (c) 2021 HansenH')
 
+        self.text_about.tag_add('link','6.0','6.43')    #第六行超链接加tag
+        self.text_about.tag_config('link', foreground='blue', underline = True)
+        self.text_about.tag_add('hidden','1.4','1.11')  #第一行HansenH加tag
+
+        def show_hand_cursor(event):
+            self.text_about.configure(cursor='hand2')
+        def show_arrow_cursor(event):
+            self.text_about.configure(cursor='arrow')
+        def click_link(event):
+            webbrowser.open_new_tab('https://github.com/HansenH/PeriodCalculator')
+
+        def show_heart_cursor(event):
+            self.text_about.configure(cursor='heart')
+            self.click_count = 0    #鼠标进入或离开'HansenH'都会重置计数器self.click_count
+        def show_arrow_cursor2(event):
+            self.text_about.configure(cursor='arrow')
+            self.click_count = 0
+        def click_hidden_5_times(event):
+            self.click_count += 1
+            if self.click_count == 5:
+                self.click_count = 0
+                self.hidden()    #触发hidden Easter Egg!
+
+        self.text_about.tag_bind('link', '<Enter>', show_hand_cursor)   #鼠标指向
+        self.text_about.tag_bind('link', '<Leave>', show_arrow_cursor)  #鼠标离开
+        self.text_about.tag_bind('link', '<Button-1>', click_link)      #左键点击
+        self.text_about.tag_bind('hidden', '<Enter>', show_heart_cursor)  #鼠标指向
+        self.text_about.tag_bind('hidden', '<Leave>', show_arrow_cursor2) #鼠标离开
+        self.text_about.tag_bind('hidden', '<Button-1>', click_hidden_5_times)#触发hidden
+        self.text_about.place(relx=0.5, rely=0.2, anchor='n')
+
+    def click_calendar(self):
+        '''点击日历按钮'''
+        self.indicator.place(relx=0.9, rely=0.35, anchor='center')  #移动爱心位置
+        self.last_frame.destroy()       #关闭之前的右侧页面
+        self.init_frame_calendar()      #打开新的右侧页面
+        self.last_frame = self.frame_calendar
 
     def click_stats(self):
         '''点击统计数据按钮'''
@@ -247,11 +316,27 @@ class UserInterface():
 
     def click_about(self):
         '''点击关于按钮'''
-        self.indicator.place(relx=0.9, rely=0.87, anchor='center')
-        self.last_frame.destroy()
-        self.init_frame_about()
+        self.indicator.place(relx=0.9, rely=0.87, anchor='center')  #移动爱心位置
+        self.last_frame.destroy()       #关闭之前的右侧页面
+        self.init_frame_about()         #打开新的右侧页面
         self.last_frame = self.frame_about
         
+    def hidden(self):
+        '''Easter Egg!'''
+        messagebox.showinfo(message='此处有彩蛋！')
+
+    def load_error_messagebox(self):
+        '''加载记录文件发生异常的弹窗'''
+        if self.main.error_code == 1:
+            messagebox.showwarning(message='记录文件"{}"存在格式错误, 已重新创建！\n原记录文件已备份为"{}"'
+                    .format(self.main.records_file, self.main.file_rename))
+        elif self.main.error_code == 2:
+            messagebox.showwarning(message='记录文件"{}"内存在日期逻辑错误, 已重新创建！\n原记录文件已备份为"{}"'
+                    .format(self.main.records_file, self.main.file_rename)) 
+        elif self.main.error_code == 3:
+            messagebox.showwarning(message='记录进行中经期的文件"{}"存在错误, 已重新创建！'
+                    .format(self.main.ongoing_file)) 
+
 
 if __name__ == '__main__':
     print('This is not the start file, please run "core.py".')
