@@ -5,6 +5,7 @@
 Period Calculator V1.1
 
 by HansenH  (hansenh@foxmail.com)
+
 ------
 V1.1 2021-Jan-30 (to fix a small bug)
 
