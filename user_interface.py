@@ -6,8 +6,12 @@ from tkinter import Canvas
 from tkinter import Label
 from tkinter import Text
 from tkinter import messagebox
+import icon
+import base64
+import os
 import ctypes
 import webbrowser
+import time
 
 class UserInterface():
     '''用户界面，包括图形化窗口与交互逻辑'''
@@ -16,7 +20,11 @@ class UserInterface():
         self.main = main
         self.window = Tk()
         self.window.iconbitmap('icon.ico')
-        self.window.title('Period Calculator V%s' % self.main.version)
+        self.window.title('Period Calculator V%s' % self.main.version)  #窗口标题
+        with open('temp.ico','wb') as temp_ico:     #生成临时ico图标文件
+            temp_ico.write(base64.b64decode(icon.encoded_img))
+        self.window.iconbitmap('temp.ico')      #设置窗口左上角图标
+        os.remove('temp.ico')                   #删除临时ico图标文件
 
         self.scale_factor = 1   #缩放因子
         self.dpi_adapt()        #高DPI适配
@@ -178,6 +186,7 @@ class UserInterface():
             7 * self.window_width / 375, 2 * self.window_width / 375, 
             9 * self.window_width / 375, 0, 
             12 * self.window_width / 375, 0, 
+            13 * self.window_width / 375, 1 * self.window_width / 375, 
             14 * self.window_width / 375, 3 * self.window_width / 375, 
             14 * self.window_width / 375, 6 * self.window_width / 375, 
             13 * self.window_width / 375, 8 * self.window_width / 375, 
@@ -185,6 +194,7 @@ class UserInterface():
             1 * self.window_width / 375, 8 * self.window_width / 375, 
             0, 6 * self.window_width / 375, 
             0, 3 * self.window_width / 375, 
+            1 * self.window_width / 375, 1 * self.window_width / 375,
             fill='#DA70D6',     #orchid
         )   #画一个多边形爱心
         self.indicator.place(relx=0.9, rely=0.48, anchor='center')
@@ -323,7 +333,70 @@ class UserInterface():
         
     def hidden(self):
         '''Easter Egg!'''
-        messagebox.showinfo(message='此处有彩蛋！')
+        self.last_frame.destroy()           #销毁原页面
+        self.frame_left.pack_forget()       #暂时隐藏左边栏
+        frame_hidden = Frame(
+            self.window, 
+            bd=self.window_width / 120,
+            relief='groove', 
+            width=self.window_width, 
+            height=self.window_height,
+            cursor='heart',
+            bg='#FFF0F5'    #lavenderblush
+        )
+        frame_hidden.pack(side='right')
+        frame_hidden.pack_propagate(0)
+        heart_rain = Canvas(
+            frame_hidden, 
+            highlightthickness=0,
+            width=self.window_width * 0.98,
+            height=self.window_height * 0.98,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        heart_rain.place(relx=0.5, rely=0.5, anchor='center')
+
+        def create_heart(size_factor, relx, rely):
+            '''生成爱心(尺寸倍率, 相对x, 相对y), 位置锚点为中心'''
+            heart = heart_rain.create_polygon(
+                -5 * size_factor * self.window_width / 375 + relx * self.window_width, -7 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -2 * size_factor * self.window_width / 375 + relx * self.window_width, -7 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                0 * size_factor * self.window_width / 375 + relx * self.window_width, -5 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                2 * size_factor * self.window_width / 375 + relx * self.window_width, -7 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                5 * size_factor * self.window_width / 375 + relx * self.window_width, -7 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                6 * size_factor * self.window_width / 375 + relx * self.window_width, -6 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                7 * size_factor * self.window_width / 375 + relx * self.window_width, -4 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                7 * size_factor * self.window_width / 375 + relx * self.window_width, -1 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                6 * size_factor * self.window_width / 375 + relx * self.window_width, 1 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                0 * size_factor * self.window_width / 375 + relx * self.window_width, 7 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -6 * size_factor * self.window_width / 375 + relx * self.window_width, 1 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -7 * size_factor * self.window_width / 375 + relx * self.window_width, -1 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -7 * size_factor * self.window_width / 375 + relx * self.window_width, -4 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -6 * size_factor * self.window_width / 375 + relx * self.window_width, -6 * size_factor * self.window_width / 375 + rely * self.window_height,
+                fill='#FF1493',     #deeppink
+            )
+            return heart
+        
+        timer = 0
+        heart = []
+        heart.append(create_heart(3, 0.5, 0.5))
+
+        while timer < 500:
+
+
+            self.window.update()        #手动刷新
+            timer += 1
+            time.sleep(0.02)
+        heart_rain.move(heart[0], 0, 100)
+        self.window.update()        #手动刷新
+        time.sleep(1)
+        
+
+        frame_hidden.destroy()      #关闭hidden页面
+        self.frame_left.pack()      #恢复原状
+        self.frame_left.pack(side='left')
+        self.frame_left.pack_propagate(0)
+        self.init_frame_about()
+        self.last_frame = self.frame_about
 
     def load_error_messagebox(self):
         '''加载记录文件发生异常的弹窗'''
@@ -339,4 +412,4 @@ class UserInterface():
 
 
 if __name__ == '__main__':
-    print('This is not the start file, please run "core.py".')
+    print('This is not the start file, please run "main.py".')
