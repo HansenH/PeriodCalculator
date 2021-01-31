@@ -11,7 +11,7 @@ import base64
 import os
 import ctypes
 import webbrowser
-import time
+import random
 
 class UserInterface():
     '''用户界面，包括图形化窗口与交互逻辑'''
@@ -333,70 +333,99 @@ class UserInterface():
         
     def hidden(self):
         '''Easter Egg!'''
-        self.last_frame.destroy()           #销毁原页面
+        self.last_frame.destroy()           #销毁原右侧页面
         self.frame_left.pack_forget()       #暂时隐藏左边栏
-        frame_hidden = Frame(
+        heart_rain = Canvas(
             self.window, 
-            bd=self.window_width / 120,
-            relief='groove', 
-            width=self.window_width, 
+            highlightthickness=0,
+            width=self.window_width,
             height=self.window_height,
             cursor='heart',
             bg='#FFF0F5'    #lavenderblush
         )
-        frame_hidden.pack(side='right')
-        frame_hidden.pack_propagate(0)
-        heart_rain = Canvas(
-            frame_hidden, 
-            highlightthickness=0,
-            width=self.window_width * 0.98,
-            height=self.window_height * 0.98,
-            bg='#FFF0F5'    #lavenderblush
-        )
         heart_rain.place(relx=0.5, rely=0.5, anchor='center')
 
+        heart_rain.create_text(
+            0.5 *self.window_width,
+            0.35 * self.window_height,
+            text='This app is made for my beloved girl Wang Ting.',
+            font=('Times', 12, 'bold italic'),
+            anchor='center'
+        )
+        heart_rain.create_text(
+            0.5 *self.window_width,
+            0.85 * self.window_height,
+            text='<返回>',
+            anchor='center',
+            tag='back'
+        )
+
         def create_heart(size_factor, relx, rely):
-            '''生成爱心(尺寸倍率, 相对x, 相对y), 位置锚点为中心'''
+            '''生成爱心(尺寸倍率, 相对x坐标, 相对y坐标),锚点=S'''
             heart = heart_rain.create_polygon(
-                -5 * size_factor * self.window_width / 375 + relx * self.window_width, -7 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                -2 * size_factor * self.window_width / 375 + relx * self.window_width, -7 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                0 * size_factor * self.window_width / 375 + relx * self.window_width, -5 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                2 * size_factor * self.window_width / 375 + relx * self.window_width, -7 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                5 * size_factor * self.window_width / 375 + relx * self.window_width, -7 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -5 * size_factor * self.window_width / 375 + relx * self.window_width, -14 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -2 * size_factor * self.window_width / 375 + relx * self.window_width, -14 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                0 * size_factor * self.window_width / 375 + relx * self.window_width, -12 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                2 * size_factor * self.window_width / 375 + relx * self.window_width, -14 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                5 * size_factor * self.window_width / 375 + relx * self.window_width, -14 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                6 * size_factor * self.window_width / 375 + relx * self.window_width, -13 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                7 * size_factor * self.window_width / 375 + relx * self.window_width, -11 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                7 * size_factor * self.window_width / 375 + relx * self.window_width, -8 * size_factor * self.window_width / 375 + rely * self.window_height, 
                 6 * size_factor * self.window_width / 375 + relx * self.window_width, -6 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                7 * size_factor * self.window_width / 375 + relx * self.window_width, -4 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                7 * size_factor * self.window_width / 375 + relx * self.window_width, -1 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                6 * size_factor * self.window_width / 375 + relx * self.window_width, 1 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                0 * size_factor * self.window_width / 375 + relx * self.window_width, 7 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                -6 * size_factor * self.window_width / 375 + relx * self.window_width, 1 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                -7 * size_factor * self.window_width / 375 + relx * self.window_width, -1 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                -7 * size_factor * self.window_width / 375 + relx * self.window_width, -4 * size_factor * self.window_width / 375 + rely * self.window_height, 
-                -6 * size_factor * self.window_width / 375 + relx * self.window_width, -6 * size_factor * self.window_width / 375 + rely * self.window_height,
+                0 * size_factor * self.window_width / 375 + relx * self.window_width, 0 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -6 * size_factor * self.window_width / 375 + relx * self.window_width, -6 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -7 * size_factor * self.window_width / 375 + relx * self.window_width, -8 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -7 * size_factor * self.window_width / 375 + relx * self.window_width, -11 * size_factor * self.window_width / 375 + rely * self.window_height, 
+                -6 * size_factor * self.window_width / 375 + relx * self.window_width, -13 * size_factor * self.window_width / 375 + rely * self.window_height,
                 fill='#FF1493',     #deeppink
             )
             return heart
         
-        timer = 0
-        heart = []
-        heart.append(create_heart(3, 0.5, 0.5))
+        # 尺寸--速度--出现概率
+        # 0.5--1--0.533  1--2--0.267  2--4--0.133  4--8--0.067
+        # 生成位置：relx范围 -0.1~1.1  rely=-0.1
+        hearts = []      #爱心队列
+        speed = []      #每个爱心的速度
+        PRODUCTION_RATE = 10    #每一帧生成新爱心的概率(%)
 
-        while timer < 500:
+        def heart_drop_loop():
+            '''实现爱心不断下落的循环'''
+            #生成爱心
+            if random.randint(0, 99) < PRODUCTION_RATE:
+                rand_num = random.randint(0, 999)   #四种爱心按不同概率生成
+                if rand_num < 533:
+                    hearts.append(create_heart(0.5, random.randint(-100, 1100) / 1000, 0))
+                    speed.append(1)
+                elif 533 <= rand_num < 800:
+                    hearts.append(create_heart(1, random.randint(-100, 1100) / 1000, 0))
+                    speed.append(2)
+                elif 800 <= rand_num < 933:
+                    hearts.append(create_heart(2, random.randint(-100, 1100) / 1000, 0))
+                    speed.append(4)
+                else:
+                    hearts.append(create_heart(4, random.randint(-100, 1100) / 1000, 0))
+                    speed.append(8)
+            #移动爱心
+            for i in range(len(hearts) - 1, -1, -1):
+                heart_rain.move(hearts[i], 0, speed[i] * self.window_height / 1000)
+                #删除出界的爱心（注意应当在倒序循环中删除元素）
+                if heart_rain.coords(hearts[i])[1] > self.window_height:
+                    heart_rain.delete(hearts.pop(i))
+                    del speed[i]
 
-
-            self.window.update()        #手动刷新
-            timer += 1
-            time.sleep(0.02)
-        heart_rain.move(heart[0], 0, 100)
-        self.window.update()        #手动刷新
-        time.sleep(1)
+            self.window.update()    #手动刷新
+            heart_rain.after(10, heart_drop_loop)  #after实现一段时间后再次调用自己
+            #如果改用while和time.sleep()实现，会形成阻塞，无法在循环中监测事件！
         
-
-        frame_hidden.destroy()      #关闭hidden页面
-        self.frame_left.pack()      #恢复原状
-        self.frame_left.pack(side='left')
-        self.frame_left.pack_propagate(0)
-        self.init_frame_about()
-        self.last_frame = self.frame_about
+        def back(event):
+            '''返回'''
+            heart_rain.destroy()
+            self.frame_left.pack(side='left')
+            self.frame_left.pack_propagate(0)
+            self.init_frame_about()
+            self.last_frame = self.frame_about
+        heart_rain.tag_bind('back', '<Button-1>', back)
+        heart_drop_loop()
 
     def load_error_messagebox(self):
         '''加载记录文件发生异常的弹窗'''
