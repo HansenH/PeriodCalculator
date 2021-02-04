@@ -38,7 +38,9 @@ class UserInterface():
         self.init_frame_left()      #初始化左边栏
         self.init_frame_stats()     #默认初始页
         self.last_frame = self.frame_stats  #前一次的页面
-        self.load_error_messagebox()    #弹窗通知记录文件加载异常（如有）
+        #弹窗通知记录文件加载异常（如有）
+        if self.main.load_error:
+            messagebox.showwarning(message=self.main.error_msg)
 
     def dpi_adapt(self):
         '''解决高分屏下程序界面模糊问题（高DPI适配）'''
@@ -356,7 +358,7 @@ class UserInterface():
 
     def click_add(self):
         '''点击新增按钮'''
-        add_window = Toplevel()
+        add_window = Toplevel()     #弹出新的窗口
         add_window.title('添加经期开始/结束')     #窗口标题
         with open('temp.ico','wb') as temp_ico:     #生成临时ico图标文件
             temp_ico.write(base64.b64decode(icon.encoded_img))
@@ -479,7 +481,7 @@ class UserInterface():
                     speed.append(8)
             #下移爱心
             for i in range(len(hearts) - 1, -1, -1):
-                heart_rain.move(hearts[i], 0, speed[i] * self.window_height / 1000)
+                heart_rain.move(hearts[i], 0, speed[i] * 0.75)
                 #删除出界的爱心（注意应当在倒序循环中删除元素）
                 if heart_rain.coords(hearts[i])[1] > self.window_height:
                     heart_rain.delete(hearts.pop(i))
@@ -499,18 +501,6 @@ class UserInterface():
 
         heart_rain.tag_bind('back', '<Button-1>', back)
         heart_drop_loop()
-
-    def load_error_messagebox(self):
-        '''加载记录文件发生异常的弹窗'''
-        if self.main.error_code == 1:
-            messagebox.showwarning(message='记录文件"{}"存在格式错误, 已重新创建！\n原记录文件已备份为"{}"'
-                    .format(self.main.records_file, self.main.file_rename))
-        elif self.main.error_code == 2:
-            messagebox.showwarning(message='记录文件"{}"内存在日期逻辑错误, 已重新创建！\n原记录文件已备份为"{}"'
-                    .format(self.main.records_file, self.main.file_rename)) 
-        elif self.main.error_code == 3:
-            messagebox.showwarning(message='记录进行中经期的文件"{}"存在错误, 已重新创建！'
-                    .format(self.main.ongoing_file)) 
 
 
 if __name__ == '__main__':

@@ -29,7 +29,7 @@ class Main():
         except FileNotFoundError:
             self.save_settings()
 
-        self.error_code = 0                     #向UI模块传递异常代码 0表示无异常
+        self.load_error = False                 #文件读取是否错误（决定是否弹窗警告）
         self.count = 0                          #记录条数(int)
         self.average_interval = None            #总平均周期(int)
         self.average_interval_last_six = None   #近六次平均周期(int)
@@ -90,7 +90,7 @@ class Main():
 
         except (ValueError, TypeError):
             #记录文件有错误
-            self.error_code = 1     #异常代码=1
+            self.load_error = True
             self.file_rename = 'old_' + self.records_file   #重命名目标文件名
             while True:
                 if os.path.exists(self.file_rename):
@@ -101,10 +101,12 @@ class Main():
             open(self.records_file, 'w', encoding='utf-8').close()  #新建
             self.records = []
             self.count = 0
+            self.error_msg = '记录文件"{}"存在格式错误, 已重新创建！\n原记录文件已备份为"{}"'.\
+                    format(self.records_file, self.file_rename)
 
         except DateLogicError:
             #日期逻辑错误
-            self.error_code = 2     #异常代码=2
+            self.load_error = True
             self.file_rename = 'old_' + self.records_file   #重命名目标文件名
             while True:
                 if os.path.exists(self.file_rename):
@@ -115,6 +117,8 @@ class Main():
             open(self.records_file, 'w', encoding='utf-8').close()  #新建
             self.records = []
             self.count = 0
+            self.error_msg = '记录文件"{}"内存在日期逻辑错误, 已重新创建！\n原记录文件已备份为"{}"'.\
+                    format(self.records_file, self.file_rename)
 
         #读取当前进行中经期记录
         try:
@@ -132,10 +136,8 @@ class Main():
                                         + timedelta(self.records[-1]['duration'] - 1)
                         if (last_end_date - self.ongoing_date).days >= 0:
                             raise ValueError
-        except FileNotFoundError:
-            open(self.ongoing_file, 'w', encoding='utf-8').close()
-        except (ValueError, TypeError):
-            self.error_code = 3     #异常代码=3
+        except (FileNotFoundError, ValueError, TypeError):
+            #进行中经期的记录文件不存在或存在错误
             self.ongoing_date = None
             open(self.ongoing_file, 'w', encoding='utf-8').close()
 
