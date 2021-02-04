@@ -6,6 +6,7 @@ from tkinter import Canvas
 from tkinter import Label
 from tkinter import Text
 from tkinter import messagebox
+from tkinter import Toplevel
 import icon
 import base64
 import os
@@ -19,7 +20,6 @@ class UserInterface():
     def __init__(self, main):
         self.main = main
         self.window = Tk()
-        self.window.iconbitmap('icon.ico')
         self.window.title('Period Calculator V%s' % self.main.version)  #窗口标题
         with open('temp.ico','wb') as temp_ico:     #生成临时ico图标文件
             temp_ico.write(base64.b64decode(icon.encoded_img))
@@ -39,7 +39,6 @@ class UserInterface():
         self.init_frame_stats()     #默认初始页
         self.last_frame = self.frame_stats  #前一次的页面
         self.load_error_messagebox()    #弹窗通知记录文件加载异常（如有）
-        self.click_count = 0        #hidden触发计数器
 
     def dpi_adapt(self):
         '''解决高分屏下程序界面模糊问题（高DPI适配）'''
@@ -84,7 +83,8 @@ class UserInterface():
             bg='#DA70D6',   #orchid
             fg='#FFFFFF',   #white
             activebackground='#DA70D6',
-            activeforeground='#FFFFFF'
+            activeforeground='#FFFFFF',
+            command = self.click_add
         )
         self.btn_add.place(relx=0.5, rely=0.17, anchor='center')
 
@@ -200,7 +200,7 @@ class UserInterface():
         self.indicator.place(relx=0.9, rely=0.48, anchor='center')
 
     def init_frame_calendar(self):
-        '''日历页'''
+        '''日历页框架'''
         self.frame_calendar = Frame(
             self.window, 
             bd=self.window_width / 120,
@@ -211,20 +211,20 @@ class UserInterface():
         )
         self.frame_calendar.pack(side='right')
         self.frame_calendar.pack_propagate(0)
-        self.init_text_calendar()
+        self.init_calendar()
 
-    def init_text_calendar(self):
-        '''日历文本'''
-        self.text_calendar = Label(
+    def init_calendar(self):
+        '''日历页'''
+        text_calendar = Label(
             self.frame_calendar,
             text='此功能开发中...',
             justify='left',
             bg='#FFF0F5'    #lavenderblush
         )
-        self.text_calendar.place(relx=0.5, rely=0.4, anchor='n')
+        text_calendar.place(relx=0.5, rely=0.4, anchor='n')
 
     def init_frame_stats(self):
-        '''统计数据页'''
+        '''统计数据页框架'''
         self.frame_stats = Frame(
             self.window, 
             bd=self.window_width / 120,
@@ -235,21 +235,65 @@ class UserInterface():
         )
         self.frame_stats.pack(side='right')
         self.frame_stats.pack_propagate(0)
-        self.init_text_stats()
+        self.init_stats()
 
-    def init_text_stats(self):
-        '''统计数据文本'''
+    def init_stats(self):
+        '''统计数据页'''
         self.main.show_stats()
-        self.text_stats = Label(
-            self.frame_stats,
+
+        #子框架，实现所有控件上下排列的同时整体居中
+        frame_stats_amid = Frame(
+            self.frame_stats, 
+            bg='#FFF0F5'    #lavenderblush
+        )
+        frame_stats_amid.pack(side='top', expand='yes')
+
+        text_ongoing = Label(
+            frame_stats_amid,
+            text=self.main.print_ongoing,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        text_ongoing.pack(side='top')
+
+        def click_reset():
+            ans = messagebox.askokcancel(message='您确定要取消进行中的经期吗？')
+            if ans:
+                self.main.reset()
+                self.click_stats()
+
+        if self.main.ongoing_date is not None:
+            #重置按钮，点击后重置进行中的经期并刷新本页面
+            btn_reset = Button(
+                frame_stats_amid, 
+                text='重置', 
+                bd=3, 
+                relief='groove', 
+                bg='#FFF0F5',   #lavenderblush
+                fg='#FF1493',   #deeppink
+                activebackground='#FFF0F5',
+                activeforeground='#FF1493',
+                command = click_reset
+            )
+            btn_reset.pack(side='top', pady=self.window_height / 60)
+
+        text_stats = Label(
+            frame_stats_amid,
             text=self.main.print_stats,
             justify='left',
             bg='#FFF0F5'    #lavenderblush
         )
-        self.text_stats.place(relx=0.5, rely=0.15, anchor='n')
+        text_stats.pack(side='top')
+
+        text_future = Label(
+            frame_stats_amid,
+            text=self.main.print_future,
+            justify='left',
+            bg='#FFF0F5'    #lavenderblush
+        )
+        text_future.pack(side='top')
 
     def init_frame_about(self):
-        '''"关于"页'''
+        '''关于页框架'''
         self.frame_about = Frame(
             self.window, 
             bd=self.window_width / 120,
@@ -260,11 +304,12 @@ class UserInterface():
         )
         self.frame_about.pack(side='right')
         self.frame_about.pack_propagate(0)
-        self.init_text_about()
+        self.init_about()
 
-    def init_text_about(self):
-        '''"关于"页的文本'''
-        self.text_about = Text(
+    def init_about(self):
+        '''关于页'''
+        self.click_count = 0     #hidden触发计数器
+        text_about = Text(
             self.frame_about,
             width=45,
             height=15,
@@ -273,42 +318,69 @@ class UserInterface():
             cursor='arrow',
             bg='#FFF0F5'    #lavenderblush
         )
-        self.text_about.insert('end','作者: HansenH\n\n')
-        self.text_about.insert('end','邮箱: hansenh@foxmail.com\n\n')
-        self.text_about.insert('end','源码(Python3): \n')
-        self.text_about.insert('end','https://github.com/HansenH/PeriodCalculator\n\n')
-        self.text_about.insert('end','\n\nMIT License\nCopyright (c) 2021 HansenH')
+        text_about.insert('end','作者: HansenH\n\n')
+        text_about.insert('end','邮箱: hansenh@foxmail.com\n\n')
+        text_about.insert('end','源码(Python3): \n')
+        text_about.insert('end','https://github.com/HansenH/PeriodCalculator\n\n')
+        text_about.insert('end','\n\nMIT License\nCopyright (c) 2021 HansenH')
 
-        self.text_about.tag_add('link','6.0','6.43')    #第六行超链接加tag
-        self.text_about.tag_config('link', foreground='blue', underline = True)
-        self.text_about.tag_add('hidden','1.4','1.11')  #第一行HansenH加tag
+        text_about.tag_add('link','6.0','6.43')    #第六行超链接加tag
+        text_about.tag_config('link', foreground='blue', underline = True)
+        text_about.tag_add('hidden','1.4','1.11')  #第一行HansenH加tag
 
         def show_hand_cursor(event):
-            self.text_about.configure(cursor='hand2')
+            text_about.configure(cursor='hand2')
         def show_arrow_cursor(event):
-            self.text_about.configure(cursor='arrow')
+            text_about.configure(cursor='arrow')
         def click_link(event):
             webbrowser.open_new_tab('https://github.com/HansenH/PeriodCalculator')
 
         def show_heart_cursor(event):
-            self.text_about.configure(cursor='heart')
-            self.click_count = 0    #鼠标进入或离开'HansenH'都会重置计数器self.click_count
+            text_about.configure(cursor='heart')
+            self.click_count = 0    #鼠标进入或离开'HansenH'都会重置计数器self.self.click_count
         def show_arrow_cursor2(event):
-            self.text_about.configure(cursor='arrow')
+            text_about.configure(cursor='arrow')
             self.click_count = 0
         def click_hidden_5_times(event):
             self.click_count += 1
             if self.click_count == 5:
-                self.click_count = 0
                 self.hidden()    #触发hidden Easter Egg!
 
-        self.text_about.tag_bind('link', '<Enter>', show_hand_cursor)   #鼠标指向
-        self.text_about.tag_bind('link', '<Leave>', show_arrow_cursor)  #鼠标离开
-        self.text_about.tag_bind('link', '<Button-1>', click_link)      #左键点击
-        self.text_about.tag_bind('hidden', '<Enter>', show_heart_cursor)  #鼠标指向
-        self.text_about.tag_bind('hidden', '<Leave>', show_arrow_cursor2) #鼠标离开
-        self.text_about.tag_bind('hidden', '<Button-1>', click_hidden_5_times)#触发hidden
-        self.text_about.place(relx=0.5, rely=0.2, anchor='n')
+        text_about.tag_bind('link', '<Enter>', show_hand_cursor)   #鼠标指向
+        text_about.tag_bind('link', '<Leave>', show_arrow_cursor)  #鼠标离开
+        text_about.tag_bind('link', '<Button-1>', click_link)      #左键点击
+        text_about.tag_bind('hidden', '<Enter>', show_heart_cursor)  #鼠标指向
+        text_about.tag_bind('hidden', '<Leave>', show_arrow_cursor2) #鼠标离开
+        text_about.tag_bind('hidden', '<Button-1>', click_hidden_5_times)#触发hidden
+        text_about.place(relx=0.5, rely=0.2, anchor='n')
+
+    def click_add(self):
+        '''点击新增按钮'''
+        add_window = Toplevel()
+        add_window.title('添加经期开始/结束')     #窗口标题
+        with open('temp.ico','wb') as temp_ico:     #生成临时ico图标文件
+            temp_ico.write(base64.b64decode(icon.encoded_img))
+        add_window.iconbitmap('temp.ico')      #设置窗口左上角图标
+        os.remove('temp.ico')                  #删除临时ico图标文件
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
     def click_calendar(self):
         '''点击日历按钮'''
@@ -405,7 +477,7 @@ class UserInterface():
                 else:
                     hearts.append(create_heart(4, random.randint(-100, 1100) / 1000, 0))
                     speed.append(8)
-            #移动爱心
+            #下移爱心
             for i in range(len(hearts) - 1, -1, -1):
                 heart_rain.move(hearts[i], 0, speed[i] * self.window_height / 1000)
                 #删除出界的爱心（注意应当在倒序循环中删除元素）
@@ -424,6 +496,7 @@ class UserInterface():
             self.frame_left.pack_propagate(0)
             self.init_frame_about()
             self.last_frame = self.frame_about
+
         heart_rain.tag_bind('back', '<Button-1>', back)
         heart_drop_loop()
 

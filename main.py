@@ -3,7 +3,6 @@ from datetime import date
 from datetime import timedelta
 from user_interface import UserInterface
 import os
-import sys
 import json
 
 version = '2.0'     #版本号
@@ -191,15 +190,15 @@ class Main():
     def show_stats(self):
         '''输出统计数据'''
         self.calculate()
-        self.print_stats = ''
-        self.print_stats += ('今天是{}年{}月{}日\n\n'.format(date.today().year, 
+        self.print_ongoing = ('今天是{}年{}月{}日\n\n'.format(date.today().year, 
                 date.today().month, date.today().day))
         if self.ongoing_date is not None:
             ongoing_duration = (date.today() - self.ongoing_date).days + 1
-            self.print_stats += ('经期第%d天\n' % ongoing_duration)
-            self.print_stats += ('（开始于{}年{}月{}日）\n\n\n'.format(self.ongoing_date.year, 
-                    self.ongoing_date.month, self.ongoing_date.day))
-        self.print_stats += ('您当前一共有%d条记录\n' % self.count)
+            self.print_ongoing += ('经期第%d天' % ongoing_duration)
+            self.print_ongoing += ('（开始于{}月{}日）'.format(self.ongoing_date.month, 
+                    self.ongoing_date.day))
+
+        self.print_stats = ('\n您当前一共有%d条记录\n' % self.count)
         if self.count > 1:
             self.print_stats += ('----------------------------\n')
             self.print_stats += ('近6次平均周期:\t%d天\n' % self.average_interval_last_six)
@@ -219,17 +218,17 @@ class Main():
 
     def future(self):
         '''输出未来五次经期预测'''
-        self.calculate()
+        self.print_future = ''
         if self.count > 1:
-            self.print_stats += ('\n\n\n未来5次经期的起始日期预测: \n')
+            self.print_future += ('\n未来5次经期的起始日期预测: \n')
             if self.ongoing_date is not None:   #从当前进行中经期往后算
                 future_date = self.ongoing_date
             else:                               #从最后一次记录往后算
                 future_date = self.parse_date(self.records[-1]['from_date'])
             for i in range(5):
                 future_date += timedelta(self.average_interval_last_six)
-                self.print_stats += ('\n\t')
-                self.print_stats += (future_date.isoformat())
+                self.print_future += ('\n    ')
+                self.print_future += (future_date.isoformat())
     
     # def show_records(self):
     #     '''显示全部记录'''
@@ -295,14 +294,13 @@ class Main():
         else:
             print('\n删除失败，当前还没有任何记录哦\n')
 
-    #删除正在进行中的经期
     def reset(self):
+        '''删除正在进行中的经期'''
         self.ongoing_date = None
         open(self.ongoing_file, 'w', encoding='utf-8').close()
-        print('\n已清除正在进行中的经期\n')
 
-    #记录经期开始/结束
     def add(self):
+        '''记录经期开始/结束'''
         #还没有进行中的经期
         if self.ongoing_date is None:
             print('\n正在记录经期开始...\n')
@@ -388,8 +386,8 @@ class Main():
             else:
                 print('\n操作取消，已返回主菜单\n')
 
-    #插入一条完整记录        
     def insert(self):
+        '''插入一条完整记录'''
         if self.count > 0:
             self.show_records()
             print('正在插入记录...')
@@ -521,8 +519,8 @@ class Main():
                 self.save()
                 print('\n已成功添加记录\n')
 
-    #辅助函数，将日期字符串转变为date对象
     def parse_date(self, s):
+        '''辅助函数，将日期字符串转变为date对象'''
         yyyy, mm, dd = s.split('-')
         return date(int(yyyy), int(mm), int(dd))
 
