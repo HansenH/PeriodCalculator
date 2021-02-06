@@ -7,6 +7,8 @@ from tkinter import Label
 from tkinter import Text
 from tkinter import messagebox
 from tkinter import Toplevel
+from tkinter.ttk import Combobox
+from datetime import date
 import icon
 import base64
 import os
@@ -20,6 +22,7 @@ class UserInterface():
     def __init__(self, main):
         self.main = main
         self.window = Tk()
+        self.window.withdraw()  #隐藏窗口(等到窗口宽高位置设定好后再显示)
         self.window.title('Period Calculator V%s' % self.main.version)  #窗口标题
         with open('temp.ico','wb') as temp_ico:     #生成临时ico图标文件
             temp_ico.write(base64.b64decode(icon.encoded_img))
@@ -28,16 +31,22 @@ class UserInterface():
 
         self.scale_factor = 1   #缩放因子
         self.dpi_adapt()        #高DPI适配
-        self.window_width = int(self.main.window_width * self.scale_factor)     #窗口宽
-        self.window_height = int(self.main.window_height * self.scale_factor)   #窗口高
-        window_x = int((self.window.winfo_screenwidth() * self.scale_factor - self.window_width) / 2)   #窗口位置（居中）
-        window_y = int((self.window.winfo_screenheight() * self.scale_factor - self.window_height) / 2) #窗口位置（居中）
-        self.window.geometry('{}x{}+{}+{}'.format(self.window_width, self.window_height, window_x, window_y))
+        self.window_width = int(self.main.window_width * self.scale_factor)    
+        self.window_height = int(self.main.window_height * self.scale_factor)   
+        window_x = int((self.window.winfo_screenwidth() * self.scale_factor - self.window_width) / 2)
+        window_y = int((self.window.winfo_screenheight() * self.scale_factor - self.window_height) / 2)
+        self.window.geometry('{}x{}+{}+{}'.format(
+            self.window_width,      #窗口宽
+            self.window_height,     #窗口高
+            window_x,          #窗口位置x
+            window_y           #窗口位置y
+        ))
         self.window.resizable(False, False)      #锁定窗口大小
+        self.window.deiconify()     #显示窗口
 
         self.init_frame_left()      #初始化左边栏
-        self.init_frame_stats()     #默认初始页
-        self.last_frame = self.frame_stats  #前一次的页面
+        self.init_frame_stats()     #默认初始页=数据统计页
+        self.current_frame = self.frame_stats  #记录当前页面引用
         #弹窗通知记录文件加载异常（如有）
         if self.main.load_error:
             messagebox.showwarning(message=self.main.error_msg)
@@ -357,13 +366,72 @@ class UserInterface():
         text_about.place(relx=0.5, rely=0.2, anchor='n')
 
     def click_add(self):
-        '''点击新增按钮'''
-        add_window = Toplevel()     #弹出新的窗口
-        add_window.title('添加经期开始/结束')     #窗口标题
-        with open('temp.ico','wb') as temp_ico:     #生成临时ico图标文件
-            temp_ico.write(base64.b64decode(icon.encoded_img))
-        add_window.iconbitmap('temp.ico')      #设置窗口左上角图标
-        os.remove('temp.ico')                  #删除临时ico图标文件
+        '''点击新增按钮，创建模态对话框'''
+        dialog_add = Toplevel()     #弹出对话框
+        dialog_add.wm_transient(self.window)    #与父窗口关联，窗口管理器不会当成独立窗口
+        dialog_add.focus_set()      #焦点切换到对话框
+        dialog_add.grab_set()       #事件不会传入父窗口(父窗口无法点击)
+        dialog_add.withdraw()       #隐藏窗口(等到窗口宽高位置设定好后再显示)
+        dialog_add.title('添加经期开始/结束')     #窗口标题
+
+
+
+
+        frame_add = Frame(
+            dialog_add, 
+            padx = self.window_width / 40,
+            pady = self.window_width / 40,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        frame_add.pack()
+
+        # frame_add_amid = Frame(
+        #     frame_add, 
+        #     # padx = self.window_width / 60,
+        #     # pady = self.window_width / 60,
+        #     bg='#FFF0F5'    #lavenderblush
+        # )
+        # frame_add_amid.pack()
+
+        #下拉选项默认值=今天日期
+        default_yyyy = date.today().year
+        default_mm = date.today().month
+        default_dd = date.today().day
+
+
+
+
+        box_yyyy = Combobox(frame_add, width=4, state='readonly')
+        box_yyyy['value'] = tuple(range(1990, default_yyyy + 1))
+        box_yyyy.current(default_yyyy - 1990)
+        box_yyyy.pack(side='left', anchor='nw')
+
+        label_year = Label(frame_add, text='年  ', bg='#FFF0F5')
+        label_year.pack(side='left', anchor='nw')
+
+        box_mm = Combobox(frame_add, width=2, state='readonly')
+        box_mm['value'] = tuple(range(1, 13))
+        box_mm.current(default_mm - 1)
+        box_mm.pack(side='left', anchor='nw')
+
+        label_month = Label(frame_add, text='月  ', bg='#FFF0F5')
+        label_month.pack(side='left', anchor='nw')
+
+        box_dd = Combobox(frame_add, width=2, state='readonly')
+        box_dd['value'] = tuple(range(1, 32))
+        box_dd.current(default_dd - 1)
+        box_dd.pack(side='left', anchor='nw')
+
+        label_day = Label(frame_add, text='日', bg='#FFF0F5')
+        label_day.pack(side='left', anchor='nw')
+
+        dialog_add.update_idletasks()   #手动更新显示，以便获得布局后的窗口宽高
+        add_window_x = int((dialog_add.winfo_screenwidth() * self.scale_factor - dialog_add.winfo_width()) / 2)
+        add_window_y = int((dialog_add.winfo_screenheight() * self.scale_factor - dialog_add.winfo_height()) / 2)
+        dialog_add.geometry('+{}+{}'.format(add_window_x, add_window_y)) #设置窗口位置
+        dialog_add.resizable(False, False)      #锁定窗口大小
+        dialog_add.deiconify()      #显示窗口
+        dialog_add.wait_window()    #进入
 
 
 
@@ -378,36 +446,31 @@ class UserInterface():
 
 
 
-
-
-
-
-        
 
     def click_calendar(self):
         '''点击日历按钮'''
         self.indicator.place(relx=0.9, rely=0.35, anchor='center')  #移动爱心位置
-        self.last_frame.destroy()       #关闭之前的右侧页面
+        self.current_frame.destroy()       #关闭当前的右侧页面
         self.init_frame_calendar()      #打开新的右侧页面
-        self.last_frame = self.frame_calendar
+        self.current_frame = self.frame_calendar
 
     def click_stats(self):
         '''点击统计数据按钮'''
         self.indicator.place(relx=0.9, rely=0.48, anchor='center')  #移动爱心位置
-        self.last_frame.destroy()       #关闭之前的右侧页面
+        self.current_frame.destroy()       #关闭当前的右侧页面
         self.init_frame_stats()         #打开新的右侧页面
-        self.last_frame = self.frame_stats
+        self.current_frame = self.frame_stats
 
     def click_about(self):
         '''点击关于按钮'''
         self.indicator.place(relx=0.9, rely=0.87, anchor='center')  #移动爱心位置
-        self.last_frame.destroy()       #关闭之前的右侧页面
+        self.current_frame.destroy()       #关闭当前的右侧页面
         self.init_frame_about()         #打开新的右侧页面
-        self.last_frame = self.frame_about
+        self.current_frame = self.frame_about
         
     def hidden(self):
         '''Easter Egg!'''
-        self.last_frame.destroy()           #销毁原右侧页面
+        self.current_frame.destroy()           #销毁原右侧页面
         self.frame_left.pack_forget()       #暂时隐藏左边栏
         heart_rain = Canvas(
             self.window, 
@@ -487,7 +550,6 @@ class UserInterface():
                     heart_rain.delete(hearts.pop(i))
                     del speed[i]
 
-            self.window.update()    #手动刷新
             heart_rain.after(10, heart_drop_loop)  #after实现一段时间后再次调用自己
             #如果改用while和time.sleep()实现，会形成阻塞，无法在循环中监测事件！
         
@@ -497,10 +559,17 @@ class UserInterface():
             self.frame_left.pack(side='left')
             self.frame_left.pack_propagate(0)
             self.init_frame_about()
-            self.last_frame = self.frame_about
+            self.current_frame = self.frame_about
 
         heart_rain.tag_bind('back', '<Button-1>', back)
         heart_drop_loop()
+
+    def refresh(self):
+        '''(在记录改动后)刷新当前页面'''
+        if self.current_frame == self.frame_stats:
+            self.click_stats()
+        # elif self.current_frame == self.frame_list:
+        #     self.click_list()
 
 
 if __name__ == '__main__':
