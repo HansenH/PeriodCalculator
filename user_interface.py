@@ -7,6 +7,8 @@ from tkinter import Label
 from tkinter import Text
 from tkinter import messagebox
 from tkinter import Toplevel
+from tkinter import Checkbutton
+from tkinter import BooleanVar
 from tkinter.ttk import Combobox
 from datetime import date
 import icon
@@ -54,12 +56,15 @@ class UserInterface():
     def dpi_adapt(self):
         '''解决高分屏下程序界面模糊问题（高DPI适配）'''
         if self.main.dpi_adapt:
-            #设置由应用程序自己控制缩放
-            ctypes.windll.shcore.SetProcessDpiAwareness(1)
-            #获得显示设置的缩放因子
-            self.scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
-            #设置组件缩放
-            self.window.tk.call('tk', 'scaling', self.scale_factor * 1.6)
+            try:
+                #设置由应用程序自己控制缩放
+                ctypes.windll.shcore.SetProcessDpiAwareness(1)
+                #获得显示设置的缩放因子
+                self.scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
+                #设置组件缩放
+                self.window.tk.call('tk', 'scaling', self.scale_factor * 1.6)
+            except Exception:
+                pass
 
     def init_frame_left(self):
         '''左边栏框架'''
@@ -95,7 +100,7 @@ class UserInterface():
             fg='#FFFFFF',   #white
             activebackground='#DA70D6',
             activeforeground='#FFFFFF',
-            command = self.click_add
+            command=self.click_add
         )
         self.btn_add.place(relx=0.5, rely=0.17, anchor='center')
 
@@ -112,7 +117,7 @@ class UserInterface():
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
             activeforeground='#FF1493',
-            command = self.click_calendar
+            command=self.click_calendar
         )
         self.btn_calendar.place(relx=0.5, rely=0.35, anchor='center')
     
@@ -129,7 +134,7 @@ class UserInterface():
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
             activeforeground='#FF1493',
-            command = self.click_stats
+            command=self.click_stats
         )
         self.btn_stats.place(relx=0.5, rely=0.48, anchor='center')
 
@@ -161,7 +166,8 @@ class UserInterface():
             bg='#FFF0F5',   #lavenderblush
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
-            activeforeground='#FF1493'
+            activeforeground='#FF1493',
+            command=self.click_settings
         )
         self.btn_settings.place(relx=0.5, rely=0.74, anchor='center')
 
@@ -178,7 +184,7 @@ class UserInterface():
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
             activeforeground='#FF1493',
-            command = self.click_about
+            command=self.click_about
         )
         self.btn_about.place(relx=0.5, rely=0.87, anchor='center')
 
@@ -277,13 +283,13 @@ class UserInterface():
             btn_reset = Button(
                 frame_stats_amid, 
                 text='重置', 
-                bd=3, 
+                bd=2, 
                 relief='groove', 
-                bg='#FFF0F5',   #lavenderblush
+                bg='#FFFFFF',   #white
                 fg='#FF1493',   #deeppink
-                activebackground='#FFF0F5',
+                activebackground='#FFFFFF',
                 activeforeground='#FF1493',
-                command = click_reset
+                command=click_reset
             )
             btn_reset.pack(side='top', pady=self.window_height / 60)
 
@@ -302,6 +308,44 @@ class UserInterface():
             bg='#FFF0F5'    #lavenderblush
         )
         text_future.pack(side='top')
+
+    def init_frame_settings(self):
+        '''设置页框架'''
+        self.frame_settings = Frame(
+            self.window, 
+            bd=self.window_width / 120,
+            relief='groove', 
+            width=self.window_width * 0.7, 
+            height=self.window_height,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        self.frame_settings.pack(side='right')
+        self.frame_settings.pack_propagate(0)
+        self.init_settings()
+
+    def init_settings(self):
+        '''设置页'''
+
+        def change_dpi_adapt():
+            '''更改dpi_adapt设置项'''
+            self.main.dpi_adapt = self.dpi_adapt.get()
+            self.main.save_settings()
+
+        #高dpi屏幕显示缩放适配（重启应用后生效）
+        self.dpi_adapt = BooleanVar(value=self.main.dpi_adapt)
+        checkbox_dpi_adapt = Checkbutton(
+            self.frame_settings, 
+            text='高dpi屏幕显示缩放适配（重启应用后生效）', 
+            variable=self.dpi_adapt,
+            onvalue=True, 
+            offvalue=False,
+            bg='#FFF0F5',    #lavenderblush
+            activebackground='#FFF0F5',
+            padx=self.window_width / 20,
+            pady=self.window_height / 20,
+            command=change_dpi_adapt
+            )
+        checkbox_dpi_adapt.pack(side='top', anchor='nw')
 
     def init_frame_about(self):
         '''关于页框架'''
@@ -374,78 +418,77 @@ class UserInterface():
         dialog_add.withdraw()       #隐藏窗口(等到窗口宽高位置设定好后再显示)
         dialog_add.title('添加经期开始/结束')     #窗口标题
 
-
-
-
         frame_add = Frame(
             dialog_add, 
-            padx = self.window_width / 40,
-            pady = self.window_width / 40,
+            padx = self.window_width / 20,
+            pady = self.window_width / 20,
             bg='#FFF0F5'    #lavenderblush
         )
         frame_add.pack()
 
-        # frame_add_amid = Frame(
-        #     frame_add, 
-        #     # padx = self.window_width / 60,
-        #     # pady = self.window_width / 60,
-        #     bg='#FFF0F5'    #lavenderblush
-        # )
-        # frame_add_amid.pack()
+        def add():
+            '''点击对话框中的添加记录按钮'''
+            yyyy = int(box_yyyy.get())      #从下拉选项框获取数据
+            mm = int(box_mm.get())
+            dd = int(box_dd.get())
+            self.main.add(yyyy, mm, dd)     #添加经期开始/结束
+            if self.main.add_error:     
+                #添加日期异常
+                messagebox.showinfo(message=self.main.error_msg)
+            else:
+                #添加记录成功
+                dialog_add.destroy()    #关闭对话框
+                self.refresh()          #刷新页面相关信息
+                messagebox.showinfo(message='添加记录成功')
 
-        #下拉选项默认值=今天日期
-        default_yyyy = date.today().year
-        default_mm = date.today().month
-        default_dd = date.today().day
+        #添加记录的按钮
+        btn_add_enter = Button(
+            frame_add, 
+            bd=2, 
+            relief='groove', 
+            bg='#FFFFFF',   #white
+            fg='#FF1493',   #deeppink
+            activebackground='#FFFFFF',
+            activeforeground='#FF1493',
+            command=add
+        )
+        btn_add_enter.pack(side='bottom', anchor='s')
+        if self.main.ongoing_date is None:
+            btn_add_enter.configure(text='添加经期开始日期')
+        else:
+            btn_add_enter.configure(text='添加经期结束日期')
 
-
-
-
-        box_yyyy = Combobox(frame_add, width=4, state='readonly')
-        box_yyyy['value'] = tuple(range(1990, default_yyyy + 1))
-        box_yyyy.current(default_yyyy - 1990)
-        box_yyyy.pack(side='left', anchor='nw')
+        box_yyyy = Combobox(frame_add, width=4, state='readonly')   #年选项框
+        box_yyyy['value'] = tuple(range(1990, date.today().year + 1))
+        box_yyyy.current(date.today().year - 1990)      #默认值为今天
+        box_yyyy.pack(side='left', anchor='n')
 
         label_year = Label(frame_add, text='年  ', bg='#FFF0F5')
-        label_year.pack(side='left', anchor='nw')
+        label_year.pack(side='left', anchor='n')
 
-        box_mm = Combobox(frame_add, width=2, state='readonly')
+        box_mm = Combobox(frame_add, width=2, state='readonly')     #月选项框
         box_mm['value'] = tuple(range(1, 13))
-        box_mm.current(default_mm - 1)
-        box_mm.pack(side='left', anchor='nw')
+        box_mm.current(date.today().month - 1)          #默认值为今天
+        box_mm.pack(side='left', anchor='n')
 
         label_month = Label(frame_add, text='月  ', bg='#FFF0F5')
-        label_month.pack(side='left', anchor='nw')
+        label_month.pack(side='left', anchor='n')
 
-        box_dd = Combobox(frame_add, width=2, state='readonly')
+        box_dd = Combobox(frame_add, width=2, state='readonly')     #日选项框
         box_dd['value'] = tuple(range(1, 32))
-        box_dd.current(default_dd - 1)
-        box_dd.pack(side='left', anchor='nw')
+        box_dd.current(date.today().day - 1)            #默认值为今天
+        box_dd.pack(side='left', anchor='n')
 
-        label_day = Label(frame_add, text='日', bg='#FFF0F5')
-        label_day.pack(side='left', anchor='nw')
+        label_day = Label(frame_add, text='日\n\n', bg='#FFF0F5')
+        label_day.pack(side='left', anchor='n')
 
-        dialog_add.update_idletasks()   #手动更新显示，以便获得布局后的窗口宽高
-        add_window_x = int((dialog_add.winfo_screenwidth() * self.scale_factor - dialog_add.winfo_width()) / 2)
-        add_window_y = int((dialog_add.winfo_screenheight() * self.scale_factor - dialog_add.winfo_height()) / 2)
-        dialog_add.geometry('+{}+{}'.format(add_window_x, add_window_y)) #设置窗口位置
+        dialog_add.update_idletasks()   #手动更新显示，以获得布局后的窗口宽高
+        dialog_add_x = int((dialog_add.winfo_screenwidth() * self.scale_factor - dialog_add.winfo_width()) / 2)
+        dialog_add_y = int((dialog_add.winfo_screenheight() * self.scale_factor - dialog_add.winfo_height()) / 2)
+        dialog_add.geometry('+{}+{}'.format(dialog_add_x, dialog_add_y)) #设置窗口位置
         dialog_add.resizable(False, False)      #锁定窗口大小
         dialog_add.deiconify()      #显示窗口
-        dialog_add.wait_window()    #进入
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        # dialog_add.wait_window()
 
     def click_calendar(self):
         '''点击日历按钮'''
@@ -460,6 +503,13 @@ class UserInterface():
         self.current_frame.destroy()       #关闭当前的右侧页面
         self.init_frame_stats()         #打开新的右侧页面
         self.current_frame = self.frame_stats
+
+    def click_settings(self):
+        '''点击设置按钮'''
+        self.indicator.place(relx=0.9, rely=0.74, anchor='center')  #移动爱心位置
+        self.current_frame.destroy()       #关闭当前的右侧页面
+        self.init_frame_settings()         #打开新的右侧页面
+        self.current_frame = self.frame_settings
 
     def click_about(self):
         '''点击关于按钮'''
@@ -481,6 +531,7 @@ class UserInterface():
             bg='#FFF0F5'    #lavenderblush
         )
         heart_rain.place(relx=0.5, rely=0.5, anchor='center')
+        heart_rain.focus_set()      #焦点切换到对话框
 
         heart_rain.create_text(
             0.5 *self.window_width,
@@ -524,6 +575,7 @@ class UserInterface():
         hearts = []      #爱心队列
         speed = []      #每个爱心的速度
         PRODUCTION_RATE = 10    #每一帧生成新爱心的概率(%)
+        SEPPD_FACTOR = 0.7      #下落速度系数
 
         def heart_drop_loop():
             '''实现爱心不断下落的循环'''
@@ -544,7 +596,7 @@ class UserInterface():
                     speed.append(8)
             #下移爱心
             for i in range(len(hearts) - 1, -1, -1):
-                heart_rain.move(hearts[i], 0, speed[i] * 0.75)
+                heart_rain.move(hearts[i], 0, speed[i] * SEPPD_FACTOR)
                 #删除出界的爱心（注意应当在倒序循环中删除元素）
                 if heart_rain.coords(hearts[i])[1] > self.window_height:
                     heart_rain.delete(hearts.pop(i))

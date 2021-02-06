@@ -29,7 +29,8 @@ class Main():
         except FileNotFoundError:
             self.save_settings()
 
-        self.load_error = False                 #文件读取是否错误（决定是否弹窗警告）
+        self.load_error = False                 #文件读取是否异常（决定是否弹窗警告）
+        self.add_error = False                  #添加记录是否异常（决定是否弹窗警告）
         self.count = 0                          #记录条数(int)
         self.average_interval = None            #总平均周期(int)
         self.average_interval_last_six = None   #近六次平均周期(int)
@@ -301,92 +302,57 @@ class Main():
         self.ongoing_date = None
         open(self.ongoing_file, 'w', encoding='utf-8').close()
 
-    def add(self):
+    def add(self, yyyy, mm, dd):
         '''记录经期开始/结束'''
         #还没有进行中的经期
         if self.ongoing_date is None:
-            print('\n正在记录经期开始...\n')
-            print('请输入选项: ')
-            print('1 今天开始    2 其他日期    3 取消\n')
-            option = input('> ').lower()
-            if option == '1':
-                self.ongoing_date = date.today()
-                with open(self.ongoing_file, 'w', encoding='utf-8') as file_obj:
-                    file_obj.write('{},{},{}'.format(self.ongoing_date.year, 
-                            self.ongoing_date.month, self.ongoing_date.day))
-                print('今天是经期第一天\n')
-            elif option == '2':
-                try:
-                    print('\n正在输入经期开始日期...')
-                    yyyy = int(input('请输入年: '))
-                    mm = int(input('请输入月: '))
-                    dd = int(input('请输入日: '))
-                    date_to_start = date(yyyy, mm, dd)
-                    if (date.today() - date_to_start).days < 0:
-                        print('\n已取消————不能记录未来的经期哦！\n')
-                    elif self.count > 0 and (self.parse_date(self.records[-1]['from_date']) 
-                                        + timedelta(self.records[-1]['duration'] - 1) 
-                                        - date_to_start).days >= 0:
-                        print('\n已取消————不能在上一次经期结束前开始！\n')
-                    else:
-                        self.ongoing_date = date_to_start
-                        with open(self.ongoing_file, 'w', encoding='utf-8') as file_obj:
-                            file_obj.write('{},{},{}'.format(date_to_start.year, 
-                                    date_to_start.month, date_to_start.day))
-                        print('\n记录成功 ({})\n'.format(self.ongoing_date))
-                except ValueError:
-                    print('\n您输入的日期有误，已取消\n')
-            else:
-                print('\n操作取消，已返回主菜单\n')
+            try:
+                date_to_start = date(yyyy, mm, dd)
+                if (date.today() - date_to_start).days < 0:
+                    self.add_error = True
+                    self.error_msg = '不能穿越到未来哦！'
+                elif self.count > 0 and (self.parse_date(self.records[-1]['from_date']) 
+                                    + timedelta(self.records[-1]['duration'] - 1) 
+                                    - date_to_start).days >= 0:
+                    self.add_error = True
+                    self.error_msg = '不能早于上一次经期哦！\n如果需要增添或修改历史记录清'
+                else:
+                    self.ongoing_date = date_to_start
+                    with open(self.ongoing_file, 'w', encoding='utf-8') as file_obj:
+                        file_obj.write('{},{},{}'.format(date_to_start.year, 
+                                date_to_start.month, date_to_start.day))
+                    self.add_error = False          #添加记录成功
+            except ValueError:
+                pass    #该异常在V2.0已不会出现，此处保留结构
  
         #已有进行中的经期
         else:
-            print('\n正在记录经期结束（结束日期指经期最后一天当天）...')
-            print('注：如果您需要记录经期开始，请先取消，再输入"reset"移除正在进行的经期\n')
-            print('请输入选项: ')
-            print('1 今天结束    2 其他日期    3 取消\n')
-            option = input('> ').lower()
-            if option == '1':
-                yyyy = date.today().year
-                mm = date.today().month
-                dd = date.today().day
-                duration = (date.today() - self.ongoing_date).days + 1
-                self.records.append({'from_date': '{}-{:0>2d}-{:0>2d}'.
-                        format(self.ongoing_date.year, self.ongoing_date.month, 
-                        self.ongoing_date.day), 'duration': duration, 'interval': None})
-                self.count += 1
-                self.save()
-                self.ongoing_date = None        #清除进行中的经期
-                open(self.ongoing_file, 'w', encoding='utf-8').close()
-                print('\n今天经期结束啦\n')
-            elif option == '2':
-                try:
-                    print('\n正在输入经期结束日期...')
-                    yyyy = int(input('请输入年: '))
-                    mm = int(input('请输入月: '))
-                    dd = int(input('请输入日: '))
-                    date_to_end = date(yyyy, mm, dd)
-                    duration = (date_to_end - self.ongoing_date).days + 1
-                    if (date.today() - date_to_end).days < 0:
-                        print('\n已取消————不能穿越到未来哦！\n')
-                    elif duration < 1:
-                        print('\n已取消————经期不能在开始前就结束哦！\n')
-                    else:
-                        self.records.append({'from_date': '{}-{:0>2d}-{:0>2d}'.
-                                                format(self.ongoing_date.year, 
-                                                    self.ongoing_date.month, 
-                                                    self.ongoing_date.day), 
-                                            'duration': duration, 
-                                            'interval': None})
-                        self.count += 1
-                        self.save()
-                        self.ongoing_date = None        #清除进行中的经期
-                        open(self.ongoing_file, 'w', encoding='utf-8').close()
-                        print('\n已记录经期结束\n')  
-                except ValueError:
-                    print('\n您输入的日期有误，已取消\n')
-            else:
-                print('\n操作取消，已返回主菜单\n')
+            try:
+                date_to_end = date(yyyy, mm, dd)
+                duration = (date_to_end - self.ongoing_date).days + 1
+                if (date.today() - date_to_end).days < 0:
+                    self.add_error = True
+                    self.error_msg = '不能穿越到未来哦！'
+                elif duration < 1:
+                    self.add_error = True
+                    self.error_msg = '经期不能在开始前就结束哦！'
+                else:
+                    self.records.append({
+                        'from_date': '{}-{:0>2d}-{:0>2d}'.format(
+                            self.ongoing_date.year, 
+                            self.ongoing_date.month, 
+                            self.ongoing_date.day
+                        ), 
+                        'duration': duration, 
+                        'interval': None
+                    })
+                    self.count += 1
+                    self.save()
+                    self.ongoing_date = None        #清除进行中的经期
+                    open(self.ongoing_file, 'w', encoding='utf-8').close()
+                    self.add_error = False          #添加记录成功
+            except ValueError:
+                pass    #该异常在V2.0已不会出现，此处保留结构
 
     def insert(self):
         '''插入一条完整记录'''
@@ -511,12 +477,15 @@ class Main():
 
             #已满足约束条件，修改self.records和文件
             if flag:
-                self.records.insert(0, {'from_date': '{}-{:0>2d}-{:0>2d}'.
-                                                format(date_to_start.year, 
-                                                    date_to_start.month, 
-                                                    date_to_start.day), 
-                                            'duration': duration, 
-                                            'interval': None})
+                self.records.insert(0, {
+                    'from_date': '{}-{:0>2d}-{:0>2d}'.format(
+                        date_to_start.year, 
+                        date_to_start.month, 
+                        date_to_start.day
+                    ), 
+                    'duration': duration, 
+                    'interval': None
+                })
                 self.count += 1
                 self.save()
                 print('\n已成功添加记录\n')
