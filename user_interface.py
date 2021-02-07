@@ -150,7 +150,8 @@ class UserInterface():
             bg='#FFF0F5',   #lavenderblush
             fg='#FF1493',   #deeppink
             activebackground='#FFF0F5',
-            activeforeground='#FF1493'
+            activeforeground='#FF1493',
+            command=self.click_list
         )
         self.btn_list.place(relx=0.5, rely=0.61, anchor='center')
 
@@ -309,6 +310,52 @@ class UserInterface():
         )
         text_future.pack(side='top')
 
+    def init_frame_list(self):
+        '''查看记录页框架'''
+        self.frame_list = Frame(
+            self.window, 
+            bd=self.window_width / 120,
+            relief='groove', 
+            width=self.window_width * 0.7, 
+            height=self.window_height,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        self.frame_list.pack(side='right')
+        self.frame_list.pack_propagate(0)
+        self.init_list()
+
+    def init_list(self):
+        '''查看记录页'''
+        text_list = Label(
+            self.frame_list,
+            text='此功能开发中...',
+            justify='left',
+            bg='#FFF0F5'    #lavenderblush
+        )
+        text_list.place(relx=0.5, rely=0.4, anchor='n')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def init_frame_settings(self):
         '''设置页框架'''
         self.frame_settings = Frame(
@@ -331,8 +378,8 @@ class UserInterface():
             self.main.dpi_adapt = self.dpi_adapt.get()
             self.main.save_settings()
 
-        #高dpi屏幕显示缩放适配（重启应用后生效）
-        self.dpi_adapt = BooleanVar(value=self.main.dpi_adapt)
+        #设置项：高dpi屏幕显示缩放适配
+        self.dpi_adapt = BooleanVar(value=self.main.dpi_adapt)  #选框默认值。必须设为实例变量，否则会被回收
         checkbox_dpi_adapt = Checkbutton(
             self.frame_settings, 
             text='高dpi屏幕显示缩放适配（重启应用后生效）', 
@@ -504,6 +551,13 @@ class UserInterface():
         self.init_frame_stats()         #打开新的右侧页面
         self.current_frame = self.frame_stats
 
+    def click_list(self):
+        '''点击查看记录'''
+        self.indicator.place(relx=0.9, rely=0.61, anchor='center')  #移动爱心位置
+        self.current_frame.destroy()       #关闭当前的右侧页面
+        self.init_frame_list()         #打开新的右侧页面
+        self.current_frame = self.frame_list
+
     def click_settings(self):
         '''点击设置按钮'''
         self.indicator.place(relx=0.9, rely=0.74, anchor='center')  #移动爱心位置
@@ -575,7 +629,7 @@ class UserInterface():
         hearts = []      #爱心队列
         speed = []      #每个爱心的速度
         PRODUCTION_RATE = 10    #每一帧生成新爱心的概率(%)
-        SEPPD_FACTOR = 0.7      #下落速度系数
+        SEPPD_FACTOR = 0.75     #下落速度系数
 
         def heart_drop_loop():
             '''实现爱心不断下落的循环'''
