@@ -9,6 +9,8 @@ from tkinter import messagebox
 from tkinter import Toplevel
 from tkinter import Checkbutton
 from tkinter import BooleanVar
+from tkinter import Listbox
+from tkinter import Scrollbar
 from tkinter.ttk import Combobox
 from datetime import date
 import icon
@@ -61,7 +63,7 @@ class UserInterface():
                 ctypes.windll.shcore.SetProcessDpiAwareness(1)
                 #获得显示设置的缩放因子
                 self.scale_factor = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100
-                #设置组件缩放
+                #设置缩放
                 self.window.tk.call('tk', 'scaling', self.scale_factor * 1.6)
             except Exception:
                 pass
@@ -91,7 +93,6 @@ class UserInterface():
         self.btn_add = Button(
             self.frame_left, 
             text='新增开始/结束', 
-            # font=('bold'),
             bd=self.window_width / 150, 
             relief='groove', 
             width=14,
@@ -326,14 +327,92 @@ class UserInterface():
 
     def init_list(self):
         '''查看记录页'''
-        text_list = Label(
-            self.frame_list,
-            text='此功能开发中...',
-            justify='left',
+        self.main.show_list()
+
+        label_list_titles = Label(
+            self.frame_list, 
+            text='\n序号        起始日期       持续天数    间隔天数',
             bg='#FFF0F5'    #lavenderblush
         )
-        text_list.place(relx=0.5, rely=0.4, anchor='n')
+        label_list_titles.pack(side='top', anchor='w', padx=self.window_width / 40)
 
+        frame_list_top = Frame(
+            self.frame_list, 
+            padx=self.window_width / 40,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        frame_list_top.pack(side='top', fill='x')
+
+        #滚动条控件
+        scrollbar_list = Scrollbar(frame_list_top, orient='vertical')
+        scrollbar_list.pack(side='right', anchor='n', fill='y')
+
+        listbox_list = Listbox(
+            frame_list_top,
+            activestyle='none',
+            selectmode='single',
+            height=int(self.window_height / 59),
+            font=('consolas', 10),
+            yscrollcommand=scrollbar_list.set   #列表绑定滚动条
+        )
+        listbox_list.insert('end', *self.main.print_list)       #载入全部记录
+        listbox_list.insert('end', '')              #末尾空行方便插入最新记录
+        listbox_list.pack(side='right', anchor='n', expand='yes', fill='x')
+
+        scrollbar_list.configure(command=listbox_list.yview)    #滚动条绑定列表
+        listbox_list.yview_moveto(1)        #视图默认滚动到底
+        # listbox_list.selection_set(self.main.count - 1)
+        # listbox_list.event_generate("<<ListboxSelect>>")    #默认选择最后一条记录
+
+        frame_list_bottom = Frame(
+            self.frame_list, 
+            padx=self.window_width / 40,
+            pady=self.window_height / 20,
+            bg='#FFF0F5'    #lavenderblush
+        )
+        frame_list_bottom.pack(side='top', fill='x')
+
+        btn_insert = Button(
+            frame_list_bottom, 
+            text='在选中行上方\n插入记录', 
+            height=2,
+            bd=2, 
+            relief='groove', 
+            bg='#FFFFFF',   #white
+            fg='#FF1493',   #deeppink
+            activebackground='#FFFFFF',
+            activeforeground='#FF1493',
+            # command=
+        )
+        btn_insert.pack(side='left', expand='yes')
+
+        btn_delete = Button(
+            frame_list_bottom, 
+            text='删除选中记录', 
+            height=2,
+            bd=2, 
+            relief='groove', 
+            bg='#FFFFFF',   #white
+            fg='#FF1493',   #deeppink
+            activebackground='#FFFFFF',
+            activeforeground='#FF1493',
+            # command=
+        )
+        btn_delete.pack(side='left', expand='yes')
+
+        btn_delete_all = Button(
+            frame_list_bottom, 
+            text='删除全部记录', 
+            height=2,
+            bd=2, 
+            relief='groove', 
+            bg='#FFFFFF',   #white
+            fg='#FF1493',   #deeppink
+            activebackground='#FFFFFF',
+            activeforeground='#FF1493',
+            # command=
+        )
+        btn_delete_all.pack(side='left', expand='yes')
 
 
 
@@ -388,11 +467,10 @@ class UserInterface():
             offvalue=False,
             bg='#FFF0F5',    #lavenderblush
             activebackground='#FFF0F5',
-            padx=self.window_width / 20,
-            pady=self.window_height / 20,
             command=change_dpi_adapt
             )
-        checkbox_dpi_adapt.pack(side='top', anchor='nw')
+        checkbox_dpi_adapt.pack(side='top', padx=self.window_width / 20,
+                pady=self.window_height / 20, anchor='nw')
 
     def init_frame_about(self):
         '''关于页框架'''
@@ -674,8 +752,8 @@ class UserInterface():
         '''(在记录改动后)刷新当前页面'''
         if self.current_frame == self.frame_stats:
             self.click_stats()
-        # elif self.current_frame == self.frame_list:
-        #     self.click_list()
+        elif self.current_frame == self.frame_list:
+            self.click_list()
 
 
 if __name__ == '__main__':

@@ -233,24 +233,22 @@ class Main():
                 self.print_future += ('\n    ')
                 self.print_future += (future_date.isoformat())
     
-    # def show_records(self):
-    #     '''显示全部记录'''
-    #     self.calculate()
-    #     print('\n------------------------------------')
-    #     print('序号\t起始日期  持续天数  间隔天数')
-    #     print('------------------------------------')
-    #     for i in range(self.count):
-    #         print('{}\t{}\t{}\t{}'.format(i+1, self.records[i]['from_date'], 
-    #                 self.records[i]['duration'], self.records[i]['interval']))
-    #     print('------------------------------------')
-    #     if self.count == 0:
-    #         print('当前还没有任何记录哦，赶紧来添加吧！')
-    #     print('')
+    def show_list(self):
+        '''列出记录'''
+        self.calculate()
+        self.print_list = []
+        for i in range(self.count):
+            self.print_list.append('{:>3}    {:>10}    {}    {}'.format(
+                i+1, 
+                self.records[i]['from_date'], 
+                self.records[i]['duration'], 
+                self.records[i]['interval']
+            ))
 
     def delete(self):
-        '''删除某条记录'''
+        '''施工中''''''删除某条记录'''
         if self.count > 0:
-            self.show_records()
+            
             try:
                 index = int(input('请输入您想要删除的记录序号: ')) - 1
                 print('\n请输入"y"确认，注意随后的间隔天数会相应改变\n')
@@ -266,25 +264,9 @@ class Main():
         else:
             print('\n删除失败，当前还没有任何记录哦\n')
 
-    def delete_last(self):
-        '''删除最后一条记录'''
-        if self.count > 0:
-            self.show_records()
-            print('\n请输入"y"确认删除最后一条记录\n')
-            if input('> ') == 'y':
-                del self.records[-1]
-                self.count -= 1
-                self.save()
-                print('\n已删除最后一条记录\n')
-            else:
-                print('\n已取消，没有任何记录被删除\n')
-        else:
-            print('\n删除失败，当前还没有任何记录哦\n')
-
     def delete_all(self):
-        '''删除全部记录'''
+        '''施工中''''''删除全部记录'''
         if self.count > 0:
-            self.show_records()
             print('【警告！所有记录将被删除】\n请输入"Yes"确认该操作\n')
             if input('> ') == 'Yes':
                 self.save(filename='records.bak')
@@ -323,7 +305,8 @@ class Main():
                                 date_to_start.month, date_to_start.day))
                     self.add_error = False          #添加记录成功
             except ValueError:
-                pass    #该异常在V2.0已不会出现，此处保留结构
+                self.add_error = True
+                self.error_msg = '该日期有误！'
  
         #已有进行中的经期
         else:
@@ -352,14 +335,13 @@ class Main():
                     open(self.ongoing_file, 'w', encoding='utf-8').close()
                     self.add_error = False          #添加记录成功
             except ValueError:
-                pass    #该异常在V2.0已不会出现，此处保留结构
+                self.add_error = True
+                self.error_msg = '该日期有误！'
 
     def insert(self):
-        '''插入一条完整记录'''
+        '''施工中''''''插入一条完整记录'''
         if self.count > 0:
-            self.show_records()
-            print('正在插入记录...')
-            print('注意: 原位置及其后的记录将向后移动一行，间隔天数也会随之改变\n')
+
             flag = True
 
             try:
