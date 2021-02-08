@@ -142,9 +142,10 @@ class Main():
             self.ongoing_date = None
             open(self.ongoing_file, 'w', encoding='utf-8').close()
 
-    def save(self):
+    def save(self, filename=None):
         '''将self.records列表中的记录保存至文件'''
-        filename = self.records_file
+        if filename is None:
+            filename = self.records_file
         with open(filename, 'w', encoding='utf-8') as file_obj:
             for record in self.records:
                 file_obj.write(record['from_date'] + ',' + str(record['duration']) + '\n')
@@ -152,6 +153,8 @@ class Main():
     def calculate(self):
         '''计算各种统计数据'''
         #计算每次间隔天数
+        if self.count > 0:
+            self.records[0]['interval'] = None
         if self.count > 1:
             for i in range(1, self.count):
                 interval = self.parse_date(self.records[i]['from_date']) \
@@ -245,39 +248,20 @@ class Main():
                 self.records[i]['interval']
             ))
 
-    def delete(self):
-        '''施工中''''''删除某条记录'''
-        if self.count > 0:
-            
-            try:
-                index = int(input('请输入您想要删除的记录序号: ')) - 1
-                print('\n请输入"y"确认，注意随后的间隔天数会相应改变\n')
-                if input('> ') == 'y':
-                    del self.records[index]
-                    self.count -= 1
-                    self.save()
-                    print('\n已删除您选择的记录\n')
-                else:
-                    print('\n已取消，没有任何记录被删除\n')
-            except (IndexError, ValueError):
-                print('\n您输入的序号无效，没有任何记录被删除\n')
-        else:
-            print('\n删除失败，当前还没有任何记录哦\n')
+    def delete(self, index):
+        '''删除某条记录'''
+        if self.count > 0 and index < self.count: 
+            del self.records[index]
+            self.count -= 1
+            self.save()
 
     def delete_all(self):
-        '''施工中''''''删除全部记录'''
+        '''删除全部记录'''
         if self.count > 0:
-            print('【警告！所有记录将被删除】\n请输入"Yes"确认该操作\n')
-            if input('> ') == 'Yes':
-                self.save(filename='records.bak')
-                self.records = []
-                self.count = 0
-                self.save()
-                print('\n已删除全部记录\n')
-            else:
-                print('\n已取消，没有任何记录被删除\n')
-        else:
-            print('\n删除失败，当前还没有任何记录哦\n')
+            self.save(filename='records.bak')    #全部删除前备份
+            self.records = []
+            self.count = 0
+            self.save()
 
     def reset(self):
         '''删除正在进行中的经期'''
@@ -338,139 +322,54 @@ class Main():
                 self.add_error = True
                 self.error_msg = '该日期有误！'
 
-    def insert(self):
-        '''施工中''''''插入一条完整记录'''
-        if self.count > 0:
+    def insert(self, index, yyyy1, mm1, dd1, yyyy2, mm2, dd2):
+        '''插入一条完整记录'''
 
-            flag = True
+        try:
+            date_to_start = date(yyyy1, mm1, dd1)
+            if index > 0 and (self.parse_date(self.records[index - 1]['from_date']) 
+                        + timedelta(self.records[index - 1]['duration'] - 1) 
+                        - date_to_start).days >= 0:
+                print('\n已取消————不能在前一次经期结束前开始！\n')
+            elif (date.today() - date_to_start).days < 0:
+                print('\n已取消————不能记录未来的经期哦！\n')
+            elif self.ongoing_date is not None and (date_to_start - 
+                    self.ongoing_date).days >= 0:
+                print('\n已取消————开始日期应早于进行中的经期的开始日期！\n')
+        except ValueError:
+            self.add_error = True
+            self.error_msg = '开始日期有误！'
+    
+        try:
+            date_to_end = date(yyyy2, mm2, dd2)
+            duration = (date_to_end - date_to_start).days + 1
+            if index < self.count and (date_to_end - 
+                    self.parse_date(self.records[index]['from_date'])).days >= 0:
+                print('\n已取消————结束应早于下一次经期记录的开始日期！\n')
+            elif (date.today() - date_to_end).days < 0:
+                print('\n已取消————不能穿越到未来哦！\n')
+            elif duration < 1:
+                print('\n已取消————经期不能在开始前就结束哦！\n')
+            elif self.ongoing_date is not None and (date_to_end - 
+                    self.ongoing_date).days >= 0:
+                print('\n已取消————结束应早于进行中的经期的开始日期！\n')
+        except ValueError:
+            self.add_error = True
+            self.error_msg = '结束日期有误！'
 
-            try:
-                index = int(input('请输入您想要插入记录的位置序号: ')) - 1
-                if index > (self.count) or index < 0:
-                    raise IndexError
-            except (IndexError, ValueError):
-                flag = False
-                print('\n您输入的序号无效，已返回主菜单\n')
+        #已满足约束条件，修改self.records和文件
 
-            if flag:
-                try:
-                    print('\n请输入开始日期...')
-                    yyyy = int(input('请输入年: '))
-                    mm = int(input('请输入月: '))
-                    dd = int(input('请输入日: '))
-                    date_to_start = date(yyyy, mm, dd)
-                    if index > 0 and (self.parse_date(self.records[index - 1]['from_date']) 
-                                + timedelta(self.records[index - 1]['duration'] - 1) 
-                                - date_to_start).days >= 0:
-                        flag = False
-                        print('\n已取消————不能在前一次经期结束前开始！\n')
-                    elif (date.today() - date_to_start).days < 0:
-                        flag = False
-                        print('\n已取消————不能记录未来的经期哦！\n')
-                    elif self.ongoing_date is not None and (date_to_start - 
-                            self.ongoing_date).days >= 0:
-                        flag = False
-                        print('\n已取消————开始日期应早于进行中的经期的开始日期！\n')
-                except ValueError:
-                    flag = False
-                    print('\n您输入的日期有误，已取消\n')
-            
-            if flag:
-                try:
-                    print('\n请输入结束日期...')
-                    yyyy = int(input('请输入年: '))
-                    mm = int(input('请输入月: '))
-                    dd = int(input('请输入日: '))
-                    date_to_end = date(yyyy, mm, dd)
-                    duration = (date_to_end - date_to_start).days + 1
-                    if index < self.count and (date_to_end - 
-                            self.parse_date(self.records[index]['from_date'])).days >= 0:
-                        flag = False
-                        print('\n已取消————结束应早于下一次经期记录的开始日期！\n')
-                    elif (date.today() - date_to_end).days < 0:
-                        flag = False
-                        print('\n已取消————不能穿越到未来哦！\n')
-                    elif duration < 1:
-                        flag = False
-                        print('\n已取消————经期不能在开始前就结束哦！\n')
-                    elif self.ongoing_date is not None and (date_to_end - 
-                            self.ongoing_date).days >= 0:
-                        flag = False
-                        print('\n已取消————结束应早于进行中的经期的开始日期！\n')
-                except ValueError:
-                    flag = False
-                    print('\n您输入的日期有误，已取消\n')
+        self.records.insert(index, {'from_date': '{}-{:0>2d}-{:0>2d}'.
+                                        format(date_to_start.year, 
+                                            date_to_start.month, 
+                                            date_to_start.day), 
+                                    'duration': duration, 
+                                    'interval': None})
+        self.count += 1
+        self.save()
+        print('\n已成功添加记录\n')
 
-            #已满足约束条件，修改self.records和文件
-            if flag:
-                self.records.insert(index, {'from_date': '{}-{:0>2d}-{:0>2d}'.
-                                                format(date_to_start.year, 
-                                                    date_to_start.month, 
-                                                    date_to_start.day), 
-                                            'duration': duration, 
-                                            'interval': None})
-                self.count += 1
-                self.save()
-                print('\n已成功添加记录\n')
-
-        #记录条数尚位0时
-        else:
-            print('正在添加您的第一条记录...\n')
-            flag = True
-
-            try:
-                print('\n请输入开始日期...')
-                yyyy = int(input('请输入年: '))
-                mm = int(input('请输入月: '))
-                dd = int(input('请输入日: '))
-                date_to_start = date(yyyy, mm, dd)
-                if (date.today() - date_to_start).days < 0:
-                    flag = False
-                    print('\n已取消————不能记录未来的经期哦！\n')
-                elif self.ongoing_date is not None and (date_to_start - 
-                        self.ongoing_date).days >= 0:
-                    flag = False
-                    print('\n已取消————开始日期应早于进行中的经期的开始日期！\n')
-            except ValueError:
-                flag = False
-                print('\n您输入的日期有误，已取消\n')
-
-            if flag:
-                try:
-                    print('\n请输入结束日期...')
-                    yyyy = int(input('请输入年: '))
-                    mm = int(input('请输入月: '))
-                    dd = int(input('请输入日: '))
-                    date_to_end = date(yyyy, mm, dd)
-                    duration = (date_to_end - date_to_start).days + 1
-                    if (date.today() - date_to_end).days < 0:
-                        flag = False
-                        print('\n已取消————不能穿越到未来哦！\n')
-                    elif duration < 1:
-                        flag = False
-                        print('\n已取消————经期不能在开始前就结束哦！\n')
-                    elif self.ongoing_date is not None and (date_to_end - 
-                            self.ongoing_date).days >= 0:
-                        flag = False
-                        print('\n已取消————结束应早于进行中的经期的开始日期！\n')
-                except ValueError:
-                    flag = False
-                    print('\n您输入的日期有误，已取消\n')
-
-            #已满足约束条件，修改self.records和文件
-            if flag:
-                self.records.insert(0, {
-                    'from_date': '{}-{:0>2d}-{:0>2d}'.format(
-                        date_to_start.year, 
-                        date_to_start.month, 
-                        date_to_start.day
-                    ), 
-                    'duration': duration, 
-                    'interval': None
-                })
-                self.count += 1
-                self.save()
-                print('\n已成功添加记录\n')
+        
 
     def parse_date(self, s):
         '''辅助函数，将日期字符串转变为date对象'''

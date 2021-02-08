@@ -275,7 +275,7 @@ class UserInterface():
         text_ongoing.pack(side='top')
 
         def click_reset():
-            ans = messagebox.askokcancel(message='您确定要取消进行中的经期吗？')
+            ans = messagebox.askokcancel(message='确定要取消进行中的经期吗？')
             if ans:
                 self.main.reset()
                 self.click_stats()
@@ -356,7 +356,7 @@ class UserInterface():
             yscrollcommand=scrollbar_list.set   #列表绑定滚动条
         )
         listbox_list.insert('end', *self.main.print_list)       #载入全部记录
-        listbox_list.insert('end', '')              #末尾空行方便插入最新记录
+        listbox_list.insert('end', '  +')              #末尾空行方便插入最新记录
         listbox_list.pack(side='right', anchor='n', expand='yes', fill='x')
 
         scrollbar_list.configure(command=listbox_list.yview)    #滚动条绑定列表
@@ -372,6 +372,11 @@ class UserInterface():
         )
         frame_list_bottom.pack(side='top', fill='x')
 
+        def insert():
+            '''插入记录'''
+            print('insert')
+
+        #插入记录按钮
         btn_insert = Button(
             frame_list_bottom, 
             text='在选中行上方\n插入记录', 
@@ -382,10 +387,21 @@ class UserInterface():
             fg='#FF1493',   #deeppink
             activebackground='#FFFFFF',
             activeforeground='#FF1493',
-            # command=
+            command=insert
         )
         btn_insert.pack(side='left', expand='yes')
 
+        def delete():
+            '''删除选中记录'''
+            if len(listbox_list.curselection()) == 1:
+                index = listbox_list.curselection()[0]
+                if index < self.main.count:
+                    ans = messagebox.askokcancel(message='确定要删除选中的记录吗？')
+                    if ans:
+                        self.main.delete(index)
+                        self.click_list()
+
+        #删除选中记录按钮
         btn_delete = Button(
             frame_list_bottom, 
             text='删除选中记录', 
@@ -396,10 +412,21 @@ class UserInterface():
             fg='#FF1493',   #deeppink
             activebackground='#FFFFFF',
             activeforeground='#FF1493',
-            # command=
+            command=delete
         )
         btn_delete.pack(side='left', expand='yes')
 
+        def delete_all():
+            '''删除全部记录'''
+            if self.main.count > 0:
+                ans = messagebox.showwarning(title='警告', message='下一步为危险操作')
+                if ans:
+                    ans = messagebox.askokcancel(title='警告：危险操作', message='确定要删除全部记录吗?')
+                    if ans:
+                        self.main.delete_all()
+                        self.click_list()
+
+        #删除全部记录按钮
         btn_delete_all = Button(
             frame_list_bottom, 
             text='删除全部记录', 
@@ -410,30 +437,9 @@ class UserInterface():
             fg='#FF1493',   #deeppink
             activebackground='#FFFFFF',
             activeforeground='#FF1493',
-            # command=
+            command=delete_all
         )
         btn_delete_all.pack(side='left', expand='yes')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def init_frame_settings(self):
         '''设置页框架'''
@@ -559,12 +565,12 @@ class UserInterface():
             self.main.add(yyyy, mm, dd)     #添加经期开始/结束
             if self.main.add_error:     
                 #添加日期异常
-                messagebox.showinfo(message=self.main.error_msg)
+                messagebox.showinfo(message=self.main.error_msg, parent=dialog_add)
             else:
                 #添加记录成功
                 dialog_add.destroy()    #关闭对话框
                 self.refresh()          #刷新页面相关信息
-                messagebox.showinfo(message='添加记录成功')
+                messagebox.showinfo(message='添加记录成功', parent=dialog_add)
 
         #添加记录的按钮
         btn_add_enter = Button(
@@ -584,8 +590,8 @@ class UserInterface():
             btn_add_enter.configure(text='添加经期结束日期')
 
         box_yyyy = Combobox(frame_add, width=4, state='readonly')   #年选项框
-        box_yyyy['value'] = tuple(range(1990, date.today().year + 1))
-        box_yyyy.current(date.today().year - 1990)      #默认值为今天
+        box_yyyy['value'] = tuple(range(2000, date.today().year + 1))
+        box_yyyy.current(date.today().year - 2000)      #默认值为今天
         box_yyyy.pack(side='left', anchor='n')
 
         label_year = Label(frame_add, text='年  ', bg='#FFF0F5')
@@ -607,7 +613,7 @@ class UserInterface():
         label_day = Label(frame_add, text='日\n\n', bg='#FFF0F5')
         label_day.pack(side='left', anchor='n')
 
-        dialog_add.update_idletasks()   #手动更新显示，以获得布局后的窗口宽高
+        dialog_add.update_idletasks()   #手动更新显示，以获得布局后的窗口宽高来设置窗口位置
         dialog_add_x = int((dialog_add.winfo_screenwidth() * self.scale_factor - dialog_add.winfo_width()) / 2)
         dialog_add_y = int((dialog_add.winfo_screenheight() * self.scale_factor - dialog_add.winfo_height()) / 2)
         dialog_add.geometry('+{}+{}'.format(dialog_add_x, dialog_add_y)) #设置窗口位置
