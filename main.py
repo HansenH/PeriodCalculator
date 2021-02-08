@@ -324,52 +324,64 @@ class Main():
 
     def insert(self, index, yyyy1, mm1, dd1, yyyy2, mm2, dd2):
         '''插入一条完整记录'''
-
+        self.add_error = False
+        
         try:
             date_to_start = date(yyyy1, mm1, dd1)
+            #下面检查开始日期是否满足约束条件
             if index > 0 and (self.parse_date(self.records[index - 1]['from_date']) 
                         + timedelta(self.records[index - 1]['duration'] - 1) 
                         - date_to_start).days >= 0:
-                print('\n已取消————不能在前一次经期结束前开始！\n')
+                self.add_error = True
+                self.error_msg = '与前一次经期存在重叠！'
             elif (date.today() - date_to_start).days < 0:
-                print('\n已取消————不能记录未来的经期哦！\n')
+                self.add_error = True
+                self.error_msg = '不能穿越到未来哦！'
             elif self.ongoing_date is not None and (date_to_start - 
                     self.ongoing_date).days >= 0:
-                print('\n已取消————开始日期应早于进行中的经期的开始日期！\n')
+                self.add_error = True
+                self.error_msg = '开始日期应早于当前进行中的经期！'
         except ValueError:
             self.add_error = True
             self.error_msg = '开始日期有误！'
     
-        try:
-            date_to_end = date(yyyy2, mm2, dd2)
-            duration = (date_to_end - date_to_start).days + 1
-            if index < self.count and (date_to_end - 
-                    self.parse_date(self.records[index]['from_date'])).days >= 0:
-                print('\n已取消————结束应早于下一次经期记录的开始日期！\n')
-            elif (date.today() - date_to_end).days < 0:
-                print('\n已取消————不能穿越到未来哦！\n')
-            elif duration < 1:
-                print('\n已取消————经期不能在开始前就结束哦！\n')
-            elif self.ongoing_date is not None and (date_to_end - 
-                    self.ongoing_date).days >= 0:
-                print('\n已取消————结束应早于进行中的经期的开始日期！\n')
-        except ValueError:
-            self.add_error = True
-            self.error_msg = '结束日期有误！'
+        if not self.add_error:
+            try:
+                date_to_end = date(yyyy2, mm2, dd2)
+                duration = (date_to_end - date_to_start).days + 1
+                #下面检查结束日期是否满足约束条件
+                if index < self.count and (date_to_end - 
+                        self.parse_date(self.records[index]['from_date'])).days >= 0:
+                    self.add_error = True
+                    self.error_msg = '与后一次经期存在重叠！'
+                elif (date.today() - date_to_end).days < 0:
+                    self.add_error = True
+                    self.error_msg = '不能穿越到未来哦！'
+                elif duration < 1:
+                    self.add_error = True
+                    self.error_msg = '经期不能在开始前就结束哦！'
+                elif self.ongoing_date is not None and (date_to_end - 
+                        self.ongoing_date).days >= 0:
+                    self.add_error = True
+                    self.error_msg = '与当前进行中的经期存在重叠！'
+            except ValueError:
+                self.add_error = True
+                self.error_msg = '结束日期有误！'
 
-        #已满足约束条件，修改self.records和文件
-
-        self.records.insert(index, {'from_date': '{}-{:0>2d}-{:0>2d}'.
-                                        format(date_to_start.year, 
-                                            date_to_start.month, 
-                                            date_to_start.day), 
-                                    'duration': duration, 
-                                    'interval': None})
-        self.count += 1
-        self.save()
-        print('\n已成功添加记录\n')
-
-        
+        #已满足约束条件，修改self.records和文件并保存
+        if not self.add_error:
+            self.records.insert(index, {
+                'from_date': '{}-{:0>2d}-{:0>2d}'.format(
+                    date_to_start.year, 
+                    date_to_start.month, 
+                    date_to_start.day
+                ), 
+                'duration': duration, 
+                'interval': None
+            })
+            self.count += 1
+            self.save()
+            self.add_error = False
 
     def parse_date(self, s):
         '''辅助函数，将日期字符串转变为date对象'''
