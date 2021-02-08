@@ -2,11 +2,13 @@
 
 经期计算器
 
-Period Calculator V1.1
+Period Calculator V1.2
 
 by HansenH  (hansenh@foxmail.com)
 
 ------
+V1.2 2021-Feb-09  (to fix a small bug)
+
 V1.1 2021-Jan-30 (to fix a small bug)
 
 V1.0 2021-Jan-03
