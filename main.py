@@ -121,6 +121,9 @@ class Main():
 
     def calculate(self):
         '''计算各种统计数据'''
+        if self.count > 0:
+            self.records[0]['interval'] = None
+            
         #计算每次间隔天数
         if self.count > 1:
             for i in range(1, self.count):
