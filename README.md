@@ -1,5 +1,10 @@
 # PeriodCalculator
 
-2.0
+经期计算器
 
-施工中......
+Period Calculator V2.0
+
+by HansenH  (hansenh@foxmail.com)
+
+------
+V2.0 2021-Feb-10
