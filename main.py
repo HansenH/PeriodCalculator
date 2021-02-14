@@ -5,7 +5,7 @@ from user_interface import UserInterface
 import os
 import json
 
-version = '2.0'     #版本号
+version = '2.0.1'     #版本号
 
 class Main():
     '''程序核心，包括初始化与功能逻辑'''

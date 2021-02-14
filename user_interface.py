@@ -671,6 +671,7 @@ class UserInterface():
         text_about.tag_bind('hidden', '<Leave>', show_arrow_cursor2) #鼠标离开
         text_about.tag_bind('hidden', '<Button-1>', click_hidden_5_times)#触发hidden
         text_about.place(relx=0.5, rely=0.2, anchor='n')
+        text_about.configure(state='disabled')
 
     def click_add(self):
         '''点击新增按钮，创建模态对话框'''
